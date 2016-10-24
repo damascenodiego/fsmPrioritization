@@ -114,24 +114,13 @@ FsmTestSuite* loadTest(FILE* f){
 	FsmTestSuite* ts = createTestSuite();
 	while(!feof(f)){
 		fgets(line,1024,f);
-		printf("\n'%s'",line);
+		//printf("\n'%s'",line);
 		FsmTestCase *test = addTestCase(ts,line);
 		ts->noResets++;
 		ts->testCase = realloc(ts->testCase,(ts->noResets+1)*sizeof(FsmTestCase*));
 		ts->testCase[ts->noResets-1] = test;
 	}
 	ts->noResets --;
-
-	int var,var2;
-
-	for (var = 0; var < ts->noResets; ++var) {
-		printf("\n");
-		FsmTestCase *tc = ts->testCase[var];
-		int tcl = tc->length;
-		for (var2 = 0; var2 < tcl; ++var2) {
-			printf("\t%d",tc->input[var2]);
-		}
-	}
 
 	return ts;
 }
@@ -148,7 +137,7 @@ FsmModel* createFsm(void){
 	fsm->outTot=-1;
 	fsm->stateTot=-1;
 	fsm->trTot=-1;
-
+	return fsm;
 }
 
 FsmTestSuite* createTestSuite(void){
@@ -157,6 +146,10 @@ FsmTestSuite* createTestSuite(void){
 	ts->avgLength = 0 ;
 	ts->length = 0 ;
 	ts->noResets = 0 ;
+	ts->p = (FsmTransition**)calloc(1,sizeof(FsmTransition*));
+	ts->q = (FsmState**)calloc(1,sizeof(FsmState*));
+	ts->qTot = -1 ;
+	ts->pTot = -1 ;
 	return ts;
 }
 
@@ -167,6 +160,8 @@ FsmTestCase* createTestCase(void){
 	tc->p = (FsmTransition**)calloc(1,sizeof(FsmTransition*));
 	tc->q = (FsmState**)calloc(1,sizeof(FsmState*));
 	tc->length = 0 ;
+	tc->qTot = -1 ;
+	tc->pTot = -1 ;
 	return tc;
 }
 
@@ -206,7 +201,7 @@ FsmState** incrementState(FsmModel * m){
 }
 
 
-FsmState** incrementTr(FsmModel * m){
+FsmTransition** incrementTr(FsmModel * m){
 	m->trTot++;
 	int sz = sizeof(FsmTransition*);
 	if(m->fsmTr == NULL) {
@@ -251,35 +246,74 @@ void addTrTo(FsmTransition* tr, FsmState * s){
 
 void printFsm(FsmModel* m){
 	int var;
+	printf("FSM model:");
 
-	printf("\nInput (%d):",m->inTot+1);
+	printf("\n\tInput (%d):",m->inTot+1);
 	for (var = 0; var <= m->inTot; ++var) {
-		printf("\n\t%d",m->fsmIn[var]);
+		printf("\n\t\t%d ",m->fsmIn[var]);
 	}
-	printf("\nOutput (%d):",m->outTot+1);
+	printf("\n\tOutput (%d):",m->outTot+1);
 	for (var = 0; var <= m->outTot; ++var) {
-		printf("\n\t%d",m->fsmOut[var]);
+		printf("\n\t\t%d ",m->fsmOut[var]);
 	}
-	printf("\nStates (%d):",m->stateTot+1);
+	printf("\n\tStates (%d):",m->stateTot+1);
 	for (var = 0; var <= m->stateTot; ++var) {
-		printf("\n\t%d",m->fsmState[var]->id);
+		printf("\n\t\t%d ",m->fsmState[var]->id);
 	}
-	printf("\nTransitions (%d):",m->trTot+1);
+	printf("\n\tTransitions (%d):",m->trTot+1);
 	for (var = 0; var <= m->trTot; ++var) {
-		printf("\n\t%d -- %d / %d -> %d"
+		printf("\n\t\t%d -- %d / %d -> %d"
 				,m->fsmTr[var]->fr->id
 				,m->fsmTr[var]->in
 				,m->fsmTr[var]->out
 				,m->fsmTr[var]->to->id
-				);
+		);
 	}
+}
+
+void printTestSuite(FsmModel* m,FsmTestSuite* ts){
+	int var,var2,var3;
+	printf("\n\nTest Suite: (q%:%f | p:%f)",
+			(((double)ts->qTot+1)/(m->stateTot+1)),
+			(((double)ts->pTot+1)/(m->trTot+1))
+			);
+	for (var = 0; var < ts->noResets; ++var) {
+		printf("\nTestCase %d:",var);
+		FsmTestCase *tc = ts->testCase[var];
+
+		int tcl = tc->length;
+		for (var2 = 0; var2 < tcl; ++var2) {
+			printf("\t%d",tc->input[var2]);
+		}
+		printf("\t\t\t\nStates covered (%f):\t",(((double)tc->qTot+1)/(m->stateTot+1)));
+//		printf("\t\t\t\nStates covered:\t");
+		for (var3 = 0; var3 <= tc->qTot; ++var3) {
+			printf("\t%d",tc->q[var3]->id);
+		}
+		printf("\t\t\t\nTransitions covered (%f):\t",(((double)tc->pTot+1)/(m->trTot+1)));
+//		printf("\t\t\t\nTransitions covered:\t");
+		for (var3 = 0; var3 <= tc->pTot; ++var3) {
+			printf("\n\t\t\t\t\t%d -- %d / %d -> %d"
+					,tc->p[var3]->fr->id
+					,tc->p[var3]->in
+					,tc->p[var3]->out
+					,tc->p[var3]->to->id
+			);
+		}
+	}
+	printf("\nCummulative q:\t");
+	for (var = 0; var < ts->noResets; ++var)  printf("%f\t",ts->cummq[var]);
+
+	printf("\nCummulative p:\t");
+	for (var = 0; var < ts->noResets; ++var)  printf("%f\t",ts->cummp[var]);
+
 }
 
 FsmTestCase* addTestCase(FsmTestSuite *t,char *line){
 	int slen = strlen(line)-1;
 	int var;
 	long l;
-	printf("\n");
+	//printf("\n");
 	FsmTestCase * tc = createTestCase();
 	int count = 1;
 	for (var = 0; var < slen; var+=3) {
@@ -295,4 +329,95 @@ FsmTestCase* addTestCase(FsmTestSuite *t,char *line){
 	}
 	tc->length = count-1;
 	return tc;
+}
+
+void evaluateCoverage(FsmModel *model, FsmTestSuite *ts){
+	int var,var2;
+	FsmTransition *tr   = NULL;
+	FsmState      *curr = NULL;
+	ts->cummq = calloc(ts->noResets,sizeof(double));
+	ts->cummp = calloc(ts->noResets,sizeof(double));
+
+	for (var = 0; var < ts->noResets; ++var) {
+		curr = model->init;
+		//printf("\n");
+		FsmTestCase *tc = ts->testCase[var];
+		int tcl = tc->length;
+		for (var2 = 0; var2 < tcl; ++var2) {
+//			printf("\t%d",tc->input[var2]);
+			tr = nextTransition(curr,tc->input[var2]);
+			addStateCoveredTC(tc,tr->fr);
+			addStateCoveredTC(tc,tr->to);
+			addTransitionCoveredTC(tc,tr);
+
+			addStateCoveredTS(ts,tr->fr);
+			addStateCoveredTS(ts,tr->to);
+			addTransitionCoveredTS(ts,tr);
+
+			curr = tr->to;
+
+		}
+		ts->cummq[var] = (((double)ts->qTot+1)/(model->stateTot+1));
+		ts->cummp[var] = (((double)ts->pTot+1)/(model->trTot+1));
+	}
+}
+
+FsmTransition * nextTransition(FsmState* s0, int input){
+	int var;
+	FsmTransition* out=NULL;
+	for (var = 0; var <= s0->outTot; ++var) {
+		out = s0->out[var];
+		if(out->in == input){
+			return out;
+		}
+	}
+	return NULL;
+}
+
+void addTransitionCoveredTC(FsmTestCase* tc, FsmTransition* tr){
+	int var;
+	for (var = 0; var <= tc->pTot; ++var) {
+		if(tc->p[var] == tr){
+			return;
+		}
+	}
+	tc->pTot++;
+	tc->p = (FsmTransition**)realloc(tc->p,(sizeof(FsmTransition*)*(tc->pTot+1)));
+	tc->p[tc->pTot] = tr;
+}
+
+void addStateCoveredTC(FsmTestCase* tc, FsmState* s){
+	int var;
+	for (var = 0; var <= tc->qTot; ++var) {
+		if(tc->q[var] == s){
+			return;
+		}
+	}
+	tc->qTot++;
+	tc->q = (FsmState**)realloc(tc->q,(sizeof(FsmState*)*(tc->qTot+1)));
+	tc->q[tc->qTot] = s;
+}
+
+void addTransitionCoveredTS(FsmTestSuite* ts, FsmTransition* tr){
+	int var;
+	for (var = 0; var <= ts->pTot; ++var) {
+		if(ts->p[var] == tr){
+			return;
+		}
+	}
+	ts->pTot++;
+	ts->p = (FsmTransition**)realloc(ts->p,(sizeof(FsmTransition*)*(ts->pTot+1)));
+	ts->p[ts->pTot] = tr;
+}
+
+void addStateCoveredTS(FsmTestSuite* ts, FsmState* s){
+	int var;
+	for (var = 0; var <= ts->qTot; ++var) {
+		if(ts->q[var] == s){
+			return;
+		}
+	}
+	ts->qTot++;
+	ts->q = (FsmState**)realloc(ts->q,(sizeof(FsmState*)*(ts->qTot+1)));
+	ts->q[ts->qTot] = s;
 }
