@@ -31,8 +31,8 @@ typedef struct _FsmModel{
 	struct _FsmState** fsmState;
 	struct _FsmTransition** fsmTr;
 	struct _FsmState* init;
-	int** fsmIn;
-	int** fsmOut;
+	int* fsmIn;
+	int* fsmOut;
 
 	int stateTot;
 	int trTot;

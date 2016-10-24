@@ -63,7 +63,7 @@ int addIn(FsmModel* m, int id){
 		}
 	}
 	m->inTot++;
-	m->fsmIn = (int**)realloc(m->fsmIn,(m->inTot+1)*sizeof(int*));
+	m->fsmIn = (int*)realloc(m->fsmIn,(m->inTot+1)*sizeof(int));
 	m->fsmIn[m->inTot] = id;
 	return m->fsmIn[m->inTot];
 }
@@ -77,7 +77,7 @@ int addOut(FsmModel* m, int id){
 
 	}
 	m->outTot++;
-	m->fsmOut = (int**)realloc(m->fsmOut,(m->outTot+1)*sizeof(int*));
+	m->fsmOut = (int*)realloc(m->fsmOut,(m->outTot+1)*sizeof(int));
 	m->fsmOut[m->outTot] = id;
 	return m->fsmOut[m->outTot];
 }
