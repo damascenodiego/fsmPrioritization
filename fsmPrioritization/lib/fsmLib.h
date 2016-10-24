@@ -86,5 +86,7 @@ void addTransitionCoveredTC(FsmTestCase* tc, FsmTransition* tr);
 void addStateCoveredTC(FsmTestCase* tc, FsmState* s);
 void addTransitionCoveredTS(FsmTestSuite* ts, FsmTransition* tr);
 void addStateCoveredTS(FsmTestSuite* ts, FsmState* s);
+void printTestSuiteCoverage(FsmTestSuite* ts);
+void printFsm(FsmModel* m);
 
 #endif /* LIB_FSMLIB_H_ */

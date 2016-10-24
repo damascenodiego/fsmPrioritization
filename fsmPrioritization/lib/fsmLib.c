@@ -270,7 +270,16 @@ void printFsm(FsmModel* m){
 		);
 	}
 }
+void printTestSuiteCoverage(FsmTestSuite* ts){
+	printf("cummulative_q:\n");
+	int var;
+	for (var = 0; var < ts->noResets; ++var)  printf("%f\t",ts->cummq[var]);
+	printf("\n");
 
+	printf("cummulative_p:\n");
+	for (var = 0; var < ts->noResets; ++var)  printf("%f\t",ts->cummp[var]);
+
+}
 void printTestSuite(FsmModel* m,FsmTestSuite* ts){
 	int var,var2,var3;
 	printf("\n\nTest Suite: (q%:%f | p:%f)",
@@ -301,13 +310,9 @@ void printTestSuite(FsmModel* m,FsmTestSuite* ts){
 			);
 		}
 	}
-	printf("\nCummulative q:\t");
-	for (var = 0; var < ts->noResets; ++var)  printf("%f\t",ts->cummq[var]);
-
-	printf("\nCummulative p:\t");
-	for (var = 0; var < ts->noResets; ++var)  printf("%f\t",ts->cummp[var]);
-
 }
+
+
 
 FsmTestCase* addTestCase(FsmTestSuite *t,char *line){
 	int slen = strlen(line)-1;

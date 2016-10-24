@@ -23,11 +23,15 @@ int main(int argc, char **argv) {
 	}
 
 	FsmModel *fsmModel = loadFsm(fsmFile);
-	printFsm(fsmModel);
+	//printFsm(fsmModel);
 
 	FsmTestSuite *fsmTest = loadTest(testFile);
 	evaluateCoverage(fsmModel,fsmTest);
-	printTestSuite(fsmModel,fsmTest);
+	printTestSuiteCoverage(fsmTest);
+
+
+	//evaluateCoverage(fsmModel,fsmTest);
+	//printTestSuite(fsmModel,fsmTest);
 
 
 
