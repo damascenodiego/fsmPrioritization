@@ -38,7 +38,8 @@ struct _rbNode *insert_rb(int key, struct _rbNode **leaf){
 	struct _rbNode * tmp= NULL;
 	if( *leaf == 0 )	{
 		*leaf = createRbNode(key,NULL,1,RB_COLOR_RED);
-	}else if(key < (*leaf)->key)	{
+		//printf("node id @ %p: %d \n",(*leaf),(*leaf)->key);
+	}else if(key <= (*leaf)->key)	{
 		(*leaf)->left = insert_rb( key, &(*leaf)->left );
 	}	else if(key > (*leaf)->key)	{
 		(*leaf)->right = insert_rb( key, &(*leaf)->right );
@@ -53,7 +54,7 @@ struct _rbNode *insert_rb(int key, struct _rbNode **leaf){
 		flipColors((*leaf));
 	}
 	(*leaf)->n = size_rb((*leaf)->left) + size_rb((*leaf)->right) +1;
-	inorder_rb_toString(*leaf);printf("\n");
+	//inorder_rb_toString(*leaf);printf("\n");
 	return (*leaf);
 }
 
@@ -94,10 +95,13 @@ struct _rbNode *delete_rb(int key, struct _rbNode **leaf){
 	if( *leaf == 0 ){
 		return NULL;
 	}else if(key < (*leaf)->key)	{
+		//inorder_rb_toString(*leaf);printf("\n");
 		(*leaf)->left = delete_rb( key, &(*leaf)->left );
 	}	else if(key > (*leaf)->key)	{
+		//inorder_rb_toString(*leaf);printf("\n");
 		(*leaf)->right = delete_rb( key, &(*leaf)->right );
 	}else{
+		//inorder_rb_toString(*leaf);printf("\n");
 		if((*leaf)->right == NULL) return (*leaf)->left;
 		if((*leaf)->left == NULL) return (*leaf)->right;
 		struct _rbNode **t = leaf;
@@ -105,7 +109,8 @@ struct _rbNode *delete_rb(int key, struct _rbNode **leaf){
 		(*leaf)->right = deleteMin_rb(&(*t)->right);
 		(*leaf)->left  = (*t)->left;
 	}
-	(*leaf)->n = (*leaf)->left->n + (*leaf)->right->n + 1;
+	(*leaf)->n = size_rb((*leaf)->left) + size_rb((*leaf)->right) +1;
+	//inorder_rb_toString(*leaf);printf("\n");
 	return (*leaf);
 
 }
@@ -187,7 +192,7 @@ struct _rbNode *min_rb(struct _rbNode **leaf){
 struct _rbNode *deleteMin_rb(struct _rbNode **leaf){
 	if((*leaf)->left == NULL) return (*leaf)->right;
 	(*leaf)->left  = deleteMin_rb(&(*leaf)->left);
-	(*leaf)->n = (*leaf)->left->n + (*leaf)->right->n + 1;
+	(*leaf)->n = size_rb((*leaf)->left) + size_rb((*leaf)->right) + 1;
 	return (*leaf);
 }
 
