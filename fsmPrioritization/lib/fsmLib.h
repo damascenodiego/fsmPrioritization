@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "rbTree_float.h"
 
 typedef struct _FsmState{
 	int id;
@@ -66,7 +67,17 @@ typedef struct _FsmTestCase{
 	int pTot;
 } FsmTestCase;
 
+typedef struct _testPair{
+	struct _FsmTestCase* ti;
+	struct _FsmTestCase* tj;
+	float ds;
+} TestPair;
 
+typedef struct _similarityMatrix{
+	//TestPair ** pair;
+	int n;
+	RedBlackNodeFloat **treePairs;
+} SimilarityMatrix;
 
 char* readLine(FILE *f);
 FsmModel* loadFsm(FILE* f);
@@ -88,5 +99,9 @@ void addTransitionCoveredTS(FsmTestSuite* ts, FsmTransition* tr);
 void addStateCoveredTS(FsmTestSuite* ts, FsmState* s);
 void printTestSuiteCoverage(FsmTestSuite* ts);
 void printFsm(FsmModel* m);
+void prioritization_lmdp(FsmTestSuite* ts);
+void prioritization_gmdp(FsmTestSuite* ts);
+SimilarityMatrix* createSimilarityMatrix(FsmTestSuite *ts);
+TestPair* calcNdtAvgLen(FsmTestCase* ti, FsmTestCase* tj);
 
 #endif /* LIB_FSMLIB_H_ */

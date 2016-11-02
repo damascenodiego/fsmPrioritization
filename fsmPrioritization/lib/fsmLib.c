@@ -1,5 +1,8 @@
 #include "fsmLib.h"
 
+#include "rbTree.h"
+#include "rbTree_float.h"
+
 //char* readLine(FILE *f){
 //	char *line = calloc(1024,sizeof(char));
 //
@@ -273,11 +276,11 @@ void printFsm(FsmModel* m){
 void printTestSuiteCoverage(FsmTestSuite* ts){
 	printf("cummulative_q:\n");
 	int var;
-	for (var = 0; var < ts->noResets; ++var)  printf("%f\t",ts->cummq[var]);
+	for (var = 0; var <= ts->qTot; ++var)  printf("%f\t",ts->cummq[var]);
 	printf("\n");
 
 	printf("cummulative_p:\n");
-	for (var = 0; var < ts->noResets; ++var)  printf("%f\t",ts->cummp[var]);
+	for (var = 0; var <= ts->pTot; ++var)  printf("%f\t",ts->cummp[var]);
 
 }
 void printTestSuite(FsmModel* m,FsmTestSuite* ts){
@@ -285,9 +288,9 @@ void printTestSuite(FsmModel* m,FsmTestSuite* ts){
 	printf("\n\nTest Suite: (q%:%f | p:%f)",
 			(((double)ts->qTot+1)/(m->stateTot+1)),
 			(((double)ts->pTot+1)/(m->trTot+1))
-			);
+	);
 	for (var = 0; var < ts->noResets; ++var) {
-		printf("\nTestCase %d:",var);
+		printf("\nTestCase %d @ %p:",var,ts->testCase[var]);
 		FsmTestCase *tc = ts->testCase[var];
 
 		int tcl = tc->length;
@@ -295,18 +298,19 @@ void printTestSuite(FsmModel* m,FsmTestSuite* ts){
 			printf("\t%d",tc->input[var2]);
 		}
 		printf("\t\t\t\nStates covered (%f):\t",(((double)tc->qTot+1)/(m->stateTot+1)));
-//		printf("\t\t\t\nStates covered:\t");
+		//		printf("\t\t\t\nStates covered:\t");
 		for (var3 = 0; var3 <= tc->qTot; ++var3) {
-			printf("\t%d",tc->q[var3]->id);
+			printf("\t%d@%p",tc->q[var3]->id,tc->q[var3]);
 		}
 		printf("\t\t\t\nTransitions covered (%f):\t",(((double)tc->pTot+1)/(m->trTot+1)));
-//		printf("\t\t\t\nTransitions covered:\t");
+		//		printf("\t\t\t\nTransitions covered:\t");
 		for (var3 = 0; var3 <= tc->pTot; ++var3) {
-			printf("\n\t\t\t\t\t%d -- %d / %d -> %d"
+			printf("\n\t\t\t\t\t%d -- %d / %d -> %d @ %p"
 					,tc->p[var3]->fr->id
 					,tc->p[var3]->in
 					,tc->p[var3]->out
 					,tc->p[var3]->to->id
+					,tc->p[var3]
 			);
 		}
 	}
@@ -340,6 +344,8 @@ void evaluateCoverage(FsmModel *model, FsmTestSuite *ts){
 	int var,var2;
 	FsmTransition *tr   = NULL;
 	FsmState      *curr = NULL;
+	if(ts->cummq != NULL) free(ts->cummq);
+	if(ts->cummp != NULL) free(ts->cummp);
 	ts->cummq = calloc(ts->noResets,sizeof(double));
 	ts->cummp = calloc(ts->noResets,sizeof(double));
 
@@ -349,11 +355,11 @@ void evaluateCoverage(FsmModel *model, FsmTestSuite *ts){
 		FsmTestCase *tc = ts->testCase[var];
 		int tcl = tc->length;
 		for (var2 = 0; var2 < tcl; ++var2) {
-//			printf("\t%d",tc->input[var2]);
+			//			printf("\t%d",tc->input[var2]);
 			tr = nextTransition(curr,tc->input[var2]);
 			addStateCoveredTC(tc,tr->fr);
 			addStateCoveredTC(tc,tr->to);
-			addTransitionCoveredTC(tc,tr);
+ 			addTransitionCoveredTC(tc,tr);
 
 			addStateCoveredTS(ts,tr->fr);
 			addStateCoveredTS(ts,tr->to);
@@ -425,4 +431,74 @@ void addStateCoveredTS(FsmTestSuite* ts, FsmState* s){
 	ts->qTot++;
 	ts->q = (FsmState**)realloc(ts->q,(sizeof(FsmState*)*(ts->qTot+1)));
 	ts->q[ts->qTot] = s;
+}
+
+void prioritization_lmdp(FsmTestSuite* ts){
+	SimilarityMatrix * sm = createSimilarityMatrix(ts);
+	//	FsmTestCase **testCase = (FsmTestCase**)calloc(ts->noResets,sizeof(FsmTestCase*));
+	//	int i = 0, _t = ts->noResets;
+	//	TestPair *max_ds = NULL;
+	//
+	//	while (_t > 0){
+	//		//		if(_t > 1){
+	//		//			max_ds = selectMax(sm);
+	//		testCase[++i] = max_ds->ti; _t--;
+	//		testCase[++i] = max_ds->tj; _t--;
+	//		//		}else{
+	//		//
+	//		//		}
+	//	}
+
+}
+
+void prioritization_gmdp(FsmTestSuite* ts){
+
+}
+
+SimilarityMatrix* createSimilarityMatrix(FsmTestSuite* ts){
+	SimilarityMatrix* out = (SimilarityMatrix*)malloc(sizeof(SimilarityMatrix));
+	out->treePairs = malloc(sizeof(RedBlackNode **)); (*out->treePairs) = NULL;
+	out->n = ts->noResets;
+	//	out->pair = (TestPair**)malloc(sizeof(TestPair*)*out->n);
+	int i,j;
+	//	for (i = 0; i < out->n-1; ++i) {
+	//		out->pair[i] = (TestPair*)malloc(sizeof(TestPair)*(out->n-(i+1)));
+	//	}
+	int sm_i,sm_j;
+	TestPair *tp =NULL;
+	for (i = 0; i < out->n-1; ++i) {
+		for (j = i+1; j < out->n; ++j) {
+			sm_i = i;
+			sm_j = (j-(i+1));
+			tp = (calcNdtAvgLen(ts->testCase[i],ts->testCase[j]));
+			//out->pair[sm_i][sm_j] = *(calcNdtAvgLen(ts->testCase[i],ts->testCase[j]));
+			insert_rbf(tp->ds,tp,out->treePairs);
+		}
+	}
+	//inorder_rbf_toString(*out->treePairs);
+	return out;
+}
+
+TestPair* calcNdtAvgLen(FsmTestCase* ti, FsmTestCase* tj){
+	RedBlackNode **tti = malloc(sizeof(RedBlackNode *)); (*tti) = NULL;
+	RedBlackNode * n = NULL;
+	TestPair* tp = (TestPair*)malloc(sizeof(TestPair));
+	tp->ti=ti; tp->tj=tj;
+	int var;
+	for (var = 0; var <= ti->pTot; ++var) {
+		if(get_rb(ti->p[var],tti)==NULL){
+			n = insert_rb(ti->p[var],tti); n->color = RB_COLOR_BLACK;
+		}
+	}
+	//inorder_rb_toString(*tti);
+	int intersec = 0;
+	for (var = 0; var <= tj->pTot; ++var) {
+		if((get_rb(tj->p[var],tti)!=NULL) ){
+			intersec++;
+		}
+	}
+	destroy_rbTree(*tti); free(tti);
+	tp->ds = (((ti->pTot+1)+(tj->pTot+1)-2*intersec)) / ((ti->length+tj->length)/2.0);
+	//printf("%f\n",tp->ds);
+	return tp;
 }

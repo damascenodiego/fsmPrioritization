@@ -10,7 +10,7 @@
 #include "rbTree.h"
 
 
-struct _rbNode* createRbNode(int k, void* v, int n, int col){
+struct _rbNode* createRbNode(void * k, void* v, int n, int col){
 	struct _rbNode* out = malloc(sizeof(struct _rbNode));
 	out->key = k;
 	out->value = v;
@@ -21,25 +21,25 @@ struct _rbNode* createRbNode(int k, void* v, int n, int col){
 	return out;
 }
 
-struct _rbNode** createRbTree(int k){
+struct _rbNode** createRbTree(){
 	struct _rbNode** out = malloc(sizeof(struct _rbNode*));
-	out[0] = createRbNode(k,NULL,1,RB_COLOR_BLACK);
+	*out = NULL;
 	return out;
 }
 void destroy_rbTree(struct _rbNode *leaf) {
-	if( leaf != 0 )	{
+	if( leaf != NULL )	{
 		destroy_rbTree(leaf->left);
 		destroy_rbTree(leaf->right);
 		free( leaf );
 	}
 }
 
-struct _rbNode *insert_rb(int key, struct _rbNode **leaf){
+struct _rbNode *insert_rb(void* key, struct _rbNode **leaf){
 	struct _rbNode * tmp= NULL;
 	if( *leaf == 0 )	{
 		*leaf = createRbNode(key,NULL,1,RB_COLOR_RED);
 		//printf("node id @ %p: %d \n",(*leaf),(*leaf)->key);
-	}else if(key <= (*leaf)->key)	{
+	}else if(key < (*leaf)->key)	{
 		(*leaf)->left = insert_rb( key, &(*leaf)->left );
 	}	else if(key > (*leaf)->key)	{
 		(*leaf)->right = insert_rb( key, &(*leaf)->right );
@@ -58,9 +58,10 @@ struct _rbNode *insert_rb(int key, struct _rbNode **leaf){
 	return (*leaf);
 }
 
-void 			inorder_rb_toString(struct _rbNode *root){
+void inorder_rb_toString(struct _rbNode *root){
+	if(root ==NULL) return;
 
-	printf("[%d",root->key);
+	printf("[%p",root->key);
 	printf(" ");
 	if(root->left != NULL){
 		inorder_rb_toString(root->left);
@@ -79,40 +80,18 @@ void 			inorder_rb_toString(struct _rbNode *root){
 	fflush(stdout);
 }
 
-struct _rbNode *get_rb(int key, struct _rbNode **leaf){
+
+
+struct _rbNode *get_rb(void* key, struct _rbNode **leaf){
 	if( *leaf == 0 ){
 		return NULL;
 	}else if(key < (*leaf)->key)	{
 		return get_rb( key, &(*leaf)->left );
 	}	else if(key > (*leaf)->key)	{
-		return ( key, &(*leaf)->right );
+		return get_rb( key, &(*leaf)->right );
 	}else{
 		return (*leaf);
 	}
-}
-
-struct _rbNode *delete_rb(int key, struct _rbNode **leaf){
-	if( *leaf == 0 ){
-		return NULL;
-	}else if(key < (*leaf)->key)	{
-		//inorder_rb_toString(*leaf);printf("\n");
-		(*leaf)->left = delete_rb( key, &(*leaf)->left );
-	}	else if(key > (*leaf)->key)	{
-		//inorder_rb_toString(*leaf);printf("\n");
-		(*leaf)->right = delete_rb( key, &(*leaf)->right );
-	}else{
-		//inorder_rb_toString(*leaf);printf("\n");
-		if((*leaf)->right == NULL) return (*leaf)->left;
-		if((*leaf)->left == NULL) return (*leaf)->right;
-		struct _rbNode **t = leaf;
-		leaf = min_rb(&(*t)->right);
-		(*leaf)->right = deleteMin_rb(&(*t)->right);
-		(*leaf)->left  = (*t)->left;
-	}
-	(*leaf)->n = size_rb((*leaf)->left) + size_rb((*leaf)->right) +1;
-	//inorder_rb_toString(*leaf);printf("\n");
-	return (*leaf);
-
 }
 
 struct _rbNode *rotateLeft(struct _rbNode **leaf){
@@ -159,26 +138,6 @@ int size_rb(struct _rbNode *h){
 	return h->n;
 }
 
-//
-//	public void put(Key k, Value v){
-//		root = put(root, k, v);
-//		root.setColor(BLACK);
-//	}
-//
-//	@Override
-//	public String toString() {
-//
-//		StringBuffer child = new StringBuffer("["+key.toString());
-//
-//		child.append(" "+((getLeft()!=null)?getLeft().toString():"[ ]"));
-//		child.append(" ");
-//
-//		child.append(" "+((getRight()!=null)?getRight().toString():"[ ]"));
-//
-//		child.append(" ]");
-//
-//		return child.toString();
-//	}
 struct _rbNode *max_rb(struct _rbNode **leaf){
 	if((*leaf)->right == NULL) return (*leaf);
 	return max_rb(&(*leaf)->right );
@@ -188,11 +147,3 @@ struct _rbNode *min_rb(struct _rbNode **leaf){
 	if((*leaf)->left == NULL) return (*leaf);
 	return min_rb(&(*leaf)->left);
 }
-//	//TODO falta ajustar metodos para deletar Node em RB Trees
-struct _rbNode *deleteMin_rb(struct _rbNode **leaf){
-	if((*leaf)->left == NULL) return (*leaf)->right;
-	(*leaf)->left  = deleteMin_rb(&(*leaf)->left);
-	(*leaf)->n = size_rb((*leaf)->left) + size_rb((*leaf)->right) + 1;
-	return (*leaf);
-}
-
