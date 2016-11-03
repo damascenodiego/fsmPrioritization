@@ -233,7 +233,7 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 
 
 void prioritization_lmdp(FsmTestSuite* ts){
-	std:: list<FsmTestCase*>* tcs = new std:: list<FsmTestCase*>();
+	std:: list<FsmTestCase*> tcs;
 	std:: list<FsmTestCase*> t;
 	for(FsmTestCase *i : ts->getTestCase()){
 		t.push_back(i);
@@ -264,23 +264,22 @@ void prioritization_lmdp(FsmTestSuite* ts){
 			}
 			//			printf("t.size() = %d\n", t.size());
 			//			printf("tcs.size() = %d\n", tcs->size());
-			tcs->push_back(*max_ti);
-			tcs->push_back(*max_tj);
+			tcs.push_back(*max_ti);
+			tcs.push_back(*max_tj);
 			t.erase(max_ti);
 			t.erase(max_tj);
 			//			printf("t.size() = %d\n", t.size());
 			//			printf("tcs.size() = %d\n", tcs->size());
 		}else{
-			tcs->push_back(*t.begin());
+			tcs.push_back(*t.begin());
 			t.erase(t.begin());
 		}
 
 	}
-	for(FsmTestCase *t : *tcs) {
+	for(FsmTestCase *t : tcs) {
 		ts->getTestCase().pop_front();
 		ts->getTestCase().push_back(t);
 	}
-	delete(tcs);
 }
 
 void prioritization_gmdp(FsmTestSuite* ts){

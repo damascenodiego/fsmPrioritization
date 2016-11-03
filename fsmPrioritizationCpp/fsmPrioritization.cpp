@@ -38,9 +38,8 @@ int main(int argc, char **argv) {
 	}
 
 
-	char * prtz = (char *)malloc(sizeof(char)*(strlen(argv[2])+10));
+	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 	{
-		prtz[0] = '\0';
 		strcat(prtz,argv[2]);
 		strcat(prtz,".cov");
 		FILE *testCoverageFile = fopen(prtz,"w");
@@ -49,10 +48,11 @@ int main(int argc, char **argv) {
 		fclose(testCoverageFile);
 
 	}
+	free(prtz);
+	prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 
-	prtz[0] = '\0';
 	strcat(prtz,argv[2]);
-	if(strcmp(argv[3],"-gmdp") == 0){
+	if(argc > 2){
 		strcat(prtz,".gmdp.test");
 		prioritization_gmdp(fsmTest);
 	}else{
@@ -102,7 +102,7 @@ void printModel(FsmModel *fsmModel){
 }
 
 void printTest(FsmTestSuite *fsmTest){
-	printf("Test suite: length: %d | noResets: %d |avg length %f (@%zu)\n",(*fsmTest).getLength(),(*fsmTest).getNoResets(),(*fsmTest).getAvgLength());
+	printf("Test suite: length: %d | noResets: %d |avg length %f (@%lu)\n",(*fsmTest).getLength(),(*fsmTest).getNoResets(),(*fsmTest).getAvgLength());
 	for (auto i : (*fsmTest).getTestCase()) {
 		(*i).print();
 	}
