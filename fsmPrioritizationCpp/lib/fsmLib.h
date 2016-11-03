@@ -33,17 +33,20 @@ public:
 	std::map<int,FsmTransition*> & getOut()	{return out;}
 	void print(){
 
-		printf("\tState%d (@%p)\n",getId(),this);
-		printf("\t\tReaches %d states: ", getOut().size());
-//		for(auto i : getOut()){
-//			printf("%d\t",(*(*(i.second)).getTo()).getId());
+		printf("\tState %d (@%p)\n",getId(),this);
+		printf("\t\tReaches %zu states\n", getOut().size());
+		std::map<int,FsmTransition*>::iterator it = getOut().begin();
+//		while(it != getOut().end()){
+//			FsmTransition *tp = it->second;
+//			tp->getTo();
+//			printf("%d\t",(*st).getId());
 //		}
-		printf("\n");
-		printf("\t\tReached by %d states: ", getIn().size());
+//		printf("\n");
+		printf("\t\tReached by %zu states\n", getIn().size());
 //		for(auto i : getIn()){
 //			printf("%d\t",i.second.getFrom().getId());
 //		}
-		printf("\n");
+//		printf("\n");
 	}
 };
 
@@ -54,8 +57,10 @@ class FsmTransition{
 	FsmState *to;
 public:
 	FsmTransition(){
+		fr = nullptr;
 		in = 0;
 		out = 0;
+		to = nullptr;
 	}
 	FsmTransition(FsmState *f,int i, int o, FsmState *t) : fr(f), in(i) ,out(o), to(t) {
 //		printf("########## DEBUG  - ini ##########\n");

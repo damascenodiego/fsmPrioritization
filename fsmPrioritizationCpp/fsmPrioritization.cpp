@@ -26,21 +26,21 @@ int main(int argc, char **argv) {
 
 
 	printf("FsmModel @ %p\n",&fsmModel);
-	printf("States:\t\t%d\n",fsmModel.getState().size());
+	printf("States:\t\t%zu\n",fsmModel.getState().size());
 	for (FsmState *i : fsmModel.getState()) {
 		(*i).print();
 	}
-	printf("Transitions:\t%d\n",fsmModel.getTransition().size());
+	printf("Transitions:\t%zu\n",fsmModel.getTransition().size());
 	for (FsmTransition *i : fsmModel.getTransition()) {
 		(*i).print();
 		(*i).getFrom()->print();
 		(*i).getTo()->print();
 	}
-	printf("In:\t\t%d\n",fsmModel.getIn().size());
+	printf("In:\t\t%zu\n",fsmModel.getIn().size());
 	for (int i : fsmModel.getIn()) {
 		printf("\t%d (@%p)\n",i,&i);
 	}
-	printf("Out:\t\t%d\n",fsmModel.getOut().size());
+	printf("Out:\t\t%zu\n",fsmModel.getOut().size());
 	for (int i : fsmModel.getOut()) {
 		printf("\t%d (@%p)\n",i,&i);
 	}
