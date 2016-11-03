@@ -14,7 +14,7 @@
 FsmModel * loadFsm(FILE* f){
 	FsmModel *fsm = new FsmModel();
 	rewind(f); //rewind file reader
-	printf("FsmModel @ %p\n",(*fsm));
+	//printf("FsmModel @ %p\n",(*fsm));
 	int to;
 	int in;
 	int out;
@@ -94,11 +94,11 @@ void evaluateCoverage(FsmModel *model, FsmTestCase *tc){
 
 FsmTestSuite* loadTest(FILE* f,FsmModel *m = nullptr){
 	char line[1024];
-	rewind(f); //rewind file reader
+	//rewind(f); //rewind file reader
 
 	FsmTestSuite* ts = new FsmTestSuite();
 	int slen = 0;
-	int id = 0;
+	int id = -1;
 	while(!feof(f)){
 		fgets(line,1024,f);
 		slen = strlen(line)-1;
@@ -122,18 +122,35 @@ FsmTestSuite* loadTest(FILE* f,FsmModel *m = nullptr){
 		line[0] = '\0';
 	}
 	ts->setAvgLength(((double)ts->getLength())/ts->getNoResets());
-	if(m != nullptr) ts->setFsmModel(m);
+	if(m != nullptr) ts->setModel(m);
 	return ts;
 }
 
 void saveTest(FILE* f,FsmTestSuite* ts){
 	rewind(f);
-
-	for(FsmTestCase *tc : ts->getTestCase()){
-		for(int i : tc->getInput()){
+	int count = 0;
+	for(FsmTestCase *it : ts->getTestCase()){
+		for(int i : (it)->getInput()){
 			fprintf(f,"%03d",i);
 		}
 		fprintf(f,"\n");
+		fflush(f);
+		it++;
+	}
+}
+
+void saveTestCoverage(FILE* f,FsmTestSuite* ts){
+	std::set<FsmTransition*> trSet;
+	std::set<FsmState*> stSet;
+	fprintf(f,"Transition Coverage (%d states)\t",ts->getModel()->getTransition().size());
+	fprintf(f,"State Coverage (%d states)\n",ts->getModel()->getState().size());
+	for(FsmTestCase *it : ts->getTestCase()){
+		for(FsmTransition *tr : it->getP()){
+			trSet.insert(tr);
+			stSet.insert(tr->getTo());
+			stSet.insert(tr->getFrom());
+		}
+		fprintf(f,"%d\t%d\n",trSet.size(),stSet.size());
 	}
 }
 
@@ -151,6 +168,7 @@ void printSimpleFormat(SimpleFsmTestCase * sf){
 }
 
 double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
+	if(t0 == nullptr || t1 == nullptr) return -1;
 	std::set<int> t0Tr;
 	std::set<int> t1Tr;
 
@@ -215,20 +233,20 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 
 
 void prioritization_lmdp(FsmTestSuite* ts){
-	std:: list<FsmTestCase*> tcs;
+	std:: list<FsmTestCase*>* tcs = new std:: list<FsmTestCase*>();
 	std:: list<FsmTestCase*> t;
 	for(FsmTestCase *i : ts->getTestCase()){
 		t.push_back(i);
 	}
+	//	printf("t.size() = %d\n", t.size());
 	std::list<FsmTestCase*>::iterator endi;
 	std::list<FsmTestCase*>::iterator endj;
 
-	double 			tmp_ds;
-
 	double 								max_ds = -1;
-	std::list<FsmTestCase*>::iterator 	it;
 	std::list<FsmTestCase*>::iterator 	max_ti;
 	std::list<FsmTestCase*>::iterator 	max_tj;
+
+	double 	tmp_ds;
 	while (t.size()>0){
 		if(t.size()>1){
 			endi = t.end(); endi--;
@@ -244,23 +262,91 @@ void prioritization_lmdp(FsmTestSuite* ts){
 					}
 				}
 			}
-			it = max_ti; it--;
-			tcs.push_back(*max_ti);
-			tcs.push_back(*max_tj);
+			//			printf("t.size() = %d\n", t.size());
+			//			printf("tcs.size() = %d\n", tcs->size());
+			tcs->push_back(*max_ti);
+			tcs->push_back(*max_tj);
 			t.erase(max_ti);
 			t.erase(max_tj);
+			//			printf("t.size() = %d\n", t.size());
+			//			printf("tcs.size() = %d\n", tcs->size());
 		}else{
-			tcs.push_back(*t.begin());
+			tcs->push_back(*t.begin());
 			t.erase(t.begin());
 		}
 
 	}
-	ts->getTestCase().clear();
-	ts->getTestCase() = tcs;
-
+	for(FsmTestCase *t : *tcs) {
+		ts->getTestCase().pop_front();
+		ts->getTestCase().push_back(t);
+	}
+	delete(tcs);
 }
 
 void prioritization_gmdp(FsmTestSuite* ts){
+	std:: list<FsmTestCase*> tcs;
+	std:: list<FsmTestCase*> t;
+	for(FsmTestCase *i : ts->getTestCase()){
+		t.push_back(i);
+	}
+	std::list<FsmTestCase*>::iterator endi = t.end(); endi--;
+	std::list<FsmTestCase*>::iterator endj = t.end();;
 
+	double 								max_ds = -1;
+	std::list<FsmTestCase*>::iterator 	it;
+	std::list<FsmTestCase*>::iterator 	max_ti;
+	std::list<FsmTestCase*>::iterator 	max_tj;
+
+	double 	tmp_ds;
+	for(auto ti = t.begin(); ti != endi; ti++){
+		auto tj = ti;
+		for(tj++; tj != endj; tj++){
+			tmp_ds = calcSimpleSimilarity(*ti,*tj);
+			if(tmp_ds > max_ds){
+				max_ds = tmp_ds;
+				max_ti = ti;
+				max_tj = tj;
+			}
+		}
+	}
+	tcs.push_back(*max_ti);
+	tcs.push_back(*max_tj);
+
+	//	(*max_ti)->print(); (*max_tj)->print();
+
+	double *ds_sum = (double *)calloc(ts->getNoResets(),sizeof(double));
+	//for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+	update_ds_sum(t,*max_ti,ds_sum);
+	//for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+	update_ds_sum(t,*max_tj,ds_sum);
+	//for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+
+	t.erase(max_ti);
+	t.erase(max_tj);
+	while (t.size()>0){
+		max_ds = -1;
+		for(auto ti = t.begin(); ti != t.end(); ti++){
+			tmp_ds = ds_sum[(*ti)->getId()];
+			if(tmp_ds > max_ds) {
+				max_ds = tmp_ds;
+				max_ti = ti;
+			}
+		}
+		tcs.push_back(*max_ti);
+		update_ds_sum(t,*max_ti,ds_sum);
+		//for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+		t.erase(max_ti);
+	}
+	for(FsmTestCase *t : tcs) {
+		ts->getTestCase().pop_front();
+		ts->getTestCase().push_back(t);
+	}
 }
 
+
+void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum){
+	ds_sum[tc->getId()] = -1;
+	for(FsmTestCase * t : ts){
+		if(ds_sum[t->getId()] >= 0.0)ds_sum[t->getId()] += calcSimpleSimilarity(t,tc);
+	}
+}

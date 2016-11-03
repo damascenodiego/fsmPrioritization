@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 	FsmTestSuite *fsmTest;
 
 
-	if(argc == 3){
+	if(argc >= 3){
 		fsmFile = fopen(argv[1],"r");
 		fsmModel = loadFsm(fsmFile);
 		fclose(fsmFile);
@@ -38,34 +38,47 @@ int main(int argc, char **argv) {
 	}
 
 
-	//	printModel(fsmModel); printTest(fsmTest);
+	char * prtzExtension;
+	char * prtz = (char *)malloc(sizeof(char)*(strlen(argv[2])+5));
+	{
+		prtzExtension = "cov";
+		prtz[0] = '\0';
+		strcat(prtz,argv[2]);
+		strcat(prtz,"."); strcat(prtz,prtzExtension);
+		FILE *testCoverageFile = fopen(prtz,"w");
+		saveTestCoverage(testCoverageFile,fsmTest);
+		fflush(testCoverageFile);
+		fclose(testCoverageFile);
 
+	}
 
-	//	auto it = (*fsmTest).getTestCase().begin();
-	//	it--;
-	//	(*(it))->print();
-	//	printSimpleFormat((*(it))->getSimpleFormat());
-	//	FsmTestCase *t0 = *it;
-	//	it++;
-	//	FsmTestCase *t1 = *(++it);
-	//	t0->print();
-	//	t1->print();
-	//	printf("ds_(t%d,t%d)=%f\n",t0->getId(),t1->getId(),calcSimpleSimilarity(t0,t1));
-	//	printf("ds_(t%d,t%d)=%f\n",t0->getId(),t1->getId(),calcSimpleSimilarity(t0->getSimpleFormat(),t1->getSimpleFormat()));
-	//	fflush(stdout);
+	char * mode = argv[3];
+	if(mode == "-gmdp"){
+		mode = "gmdp";
+		prioritization_gmdp(fsmTest);
+	}else{
+		mode = "lmdp";
+		prioritization_lmdp(fsmTest);
+	}
 
-	//printTest(fsmTest);
-	prioritization_lmdp(fsmTest);
-	//printTest(fsmTest);
-
-	const char * prtzExtension = ".prtz.test";
-	char *prtz = (char *)malloc(sizeof(char)*(strlen(argv[2])+strlen(prtzExtension)));
-	prtz[0] = '\0'; strcat(prtz,argv[2]); strcat(prtz,prtzExtension);
+	prtzExtension = "test";
+	prtz[0] = '\0';
+	strcat(prtz,argv[2]);
+	strcat(prtz,"."); strcat(prtz,mode);
+	strcat(prtz,"."); strcat(prtz,prtzExtension);
 	testPrtzFile = fopen(prtz,"w");
-	printf("OUTPUT FILE: %s\n",prtz);
 	saveTest(testPrtzFile,fsmTest);
 	fclose(testPrtzFile);
 
+	{
+		prtzExtension = ".cov";
+		prtz[0] = '\0';
+		strcat(prtz,argv[2]); strcat(prtz,"."); strcat(prtz,mode); strcat(prtz,prtzExtension);
+		FILE *testCoverageFile = fopen(prtz,"w");
+		saveTestCoverage(testCoverageFile,fsmTest);
+		fclose(testCoverageFile);
+
+	}
 	delete(fsmModel);
 	delete(fsmTest);
 

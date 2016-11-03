@@ -22,7 +22,9 @@ typedef struct _SimpleFsmTestCase{
 	int* p;
 } SimpleFsmTestCase;
 
-class FsmState{
+class FsmElement { };
+
+class FsmState : FsmElement{
 	int id;
 	std::map<int,FsmTransition*> in;
 	std::map<int,FsmTransition*> out;
@@ -59,7 +61,7 @@ public:
 	}
 };
 
-class FsmTransition{
+class FsmTransition : FsmElement{
 	int id;
 	FsmState *fr;
 	int in;
@@ -198,17 +200,19 @@ public:
 	void setLength(int i){ length = i;}
 	void setAvgLength(double i){ avgLength = i;}
 	int getNoResets(){ return testCase.size();}
-	void setFsmModel(FsmModel* m) { model = m;}
-	FsmModel* getFsmModel() { return model;}
+	void setModel(FsmModel* m) { model = m;}
+	FsmModel* getModel() { return model;}
 };
 
 FsmModel* loadFsm(FILE* f);
 FsmTestSuite* loadTest(FILE* f,FsmModel *m);
 void saveTest(FILE* f,FsmTestSuite* ts);
+void saveTestCoverage(FILE* f,FsmTestSuite* ts);
 void printSimpleFormat(SimpleFsmTestCase * sf);
 double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1);
 double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1);
 void prioritization_lmdp(FsmTestSuite* ts);
 void prioritization_gmdp(FsmTestSuite* ts);
+void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum);
 
 #endif /* LIB_FSMLIB_H_ */
