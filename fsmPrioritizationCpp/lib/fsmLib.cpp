@@ -126,6 +126,17 @@ FsmTestSuite* loadTest(FILE* f,FsmModel *m = nullptr){
 	return ts;
 }
 
+void saveTest(FILE* f,FsmTestSuite* ts){
+	rewind(f);
+
+	for(FsmTestCase *tc : ts->getTestCase()){
+		for(int i : tc->getInput()){
+			fprintf(f,"%03d",i);
+		}
+		fprintf(f,"\n");
+	}
+}
+
 void printSimpleFormat(SimpleFsmTestCase * sf){
 	if(sf != nullptr){
 		printf("Test Case #%d:" \
@@ -176,12 +187,12 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 	int t1len = (*t1).testLength;
 
 	for (int var = 0; var < (*t0).pTot; ++var) {
-			t0Tr.insert((*t0).p[var]);
-		}
+		t0Tr.insert((*t0).p[var]);
+	}
 
 	for (int var = 0; var < (*t1).pTot; ++var) {
-			t1Tr.insert((*t1).p[var]);
-		}
+		t1Tr.insert((*t1).p[var]);
+	}
 
 	int ndt = 0;
 
@@ -204,6 +215,48 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 
 
 void prioritization_lmdp(FsmTestSuite* ts){
+	std:: list<FsmTestCase*> tcs;
+	std:: list<FsmTestCase*> t;
+	for(FsmTestCase *i : ts->getTestCase()){
+		t.push_back(i);
+	}
+	std::list<FsmTestCase*>::iterator endi;
+	std::list<FsmTestCase*>::iterator endj;
+
+	double 			tmp_ds;
+
+	double 								max_ds = -1;
+	std::list<FsmTestCase*>::iterator 	it;
+	std::list<FsmTestCase*>::iterator 	max_ti;
+	std::list<FsmTestCase*>::iterator 	max_tj;
+	while (t.size()>0){
+		if(t.size()>1){
+			endi = t.end(); endi--;
+			endj = t.end();
+			for(auto ti = t.begin(); ti != endi; ti++){
+				auto tj = ti;
+				for(tj++; tj != endj; tj++){
+					tmp_ds = calcSimpleSimilarity(*ti,*tj);
+					if(tmp_ds > max_ds){
+						max_ds = tmp_ds;
+						max_ti = ti;
+						max_tj = tj;
+					}
+				}
+			}
+			it = max_ti; it--;
+			tcs.push_back(*max_ti);
+			tcs.push_back(*max_tj);
+			t.erase(max_ti);
+			t.erase(max_tj);
+		}else{
+			tcs.push_back(*t.begin());
+			t.erase(t.begin());
+		}
+
+	}
+	ts->getTestCase().clear();
+	ts->getTestCase() = tcs;
 
 }
 

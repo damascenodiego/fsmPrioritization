@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <cstring>
 #include "lib/fsmLib.h"
 
 using namespace std;
@@ -17,34 +18,53 @@ void printTest(FsmTestSuite *fsmTest);
 int main(int argc, char **argv) {
 	FILE *fsmFile;
 	FILE *testFile;
+	FILE *testPrtzFile;
+
+
+	FsmModel *fsmModel;
+	FsmTestSuite *fsmTest;
+
+
 	if(argc == 3){
 		fsmFile = fopen(argv[1],"r");
+		fsmModel = loadFsm(fsmFile);
+		fclose(fsmFile);
+
 		testFile = fopen(argv[2],"r");
+		fsmTest = loadTest(testFile,fsmModel);
+		fclose(testFile);
 	}else{
 		return (1);
 	}
 
-	FsmModel *fsmModel = loadFsm(fsmFile);
 
-	FsmTestSuite *fsmTest = loadTest(testFile,fsmModel);
-
-//	printModel(fsmModel); printTest(fsmTest);
+	//	printModel(fsmModel); printTest(fsmTest);
 
 
-	auto it = (*fsmTest).getTestCase().begin();
-//	it--;
-//	(*(it))->print();
-//	printSimpleFormat((*(it))->getSimpleFormat());
+	//	auto it = (*fsmTest).getTestCase().begin();
+	//	it--;
+	//	(*(it))->print();
+	//	printSimpleFormat((*(it))->getSimpleFormat());
+	//	FsmTestCase *t0 = *it;
+	//	it++;
+	//	FsmTestCase *t1 = *(++it);
+	//	t0->print();
+	//	t1->print();
+	//	printf("ds_(t%d,t%d)=%f\n",t0->getId(),t1->getId(),calcSimpleSimilarity(t0,t1));
+	//	printf("ds_(t%d,t%d)=%f\n",t0->getId(),t1->getId(),calcSimpleSimilarity(t0->getSimpleFormat(),t1->getSimpleFormat()));
+	//	fflush(stdout);
 
-	FsmTestCase *t0 = *it;
-	it++;
-	FsmTestCase *t1 = *(++it);
+	//printTest(fsmTest);
+	prioritization_lmdp(fsmTest);
+	//printTest(fsmTest);
 
-	t0->print();
-	t1->print();
-	printf("ds_(t%d,t%d)=%f\n",t0->getId(),t1->getId(),calcSimpleSimilarity(t0,t1));
-	printf("ds_(t%d,t%d)=%f\n",t0->getId(),t1->getId(),calcSimpleSimilarity(t0->getSimpleFormat(),t1->getSimpleFormat()));
-	fflush(stdout);
+	const char * prtzExtension = ".prtz.test";
+	char *prtz = (char *)malloc(sizeof(char)*(strlen(argv[2])+strlen(prtzExtension)));
+	prtz[0] = '\0'; strcat(prtz,argv[2]); strcat(prtz,prtzExtension);
+	testPrtzFile = fopen(prtz,"w");
+	printf("OUTPUT FILE: %s\n",prtz);
+	saveTest(testPrtzFile,fsmTest);
+	fclose(testPrtzFile);
 
 	delete(fsmModel);
 	delete(fsmTest);

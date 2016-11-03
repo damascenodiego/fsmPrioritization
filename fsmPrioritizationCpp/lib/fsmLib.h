@@ -204,6 +204,7 @@ public:
 
 FsmModel* loadFsm(FILE* f);
 FsmTestSuite* loadTest(FILE* f,FsmModel *m);
+void saveTest(FILE* f,FsmTestSuite* ts);
 void printSimpleFormat(SimpleFsmTestCase * sf);
 double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1);
 double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1);
