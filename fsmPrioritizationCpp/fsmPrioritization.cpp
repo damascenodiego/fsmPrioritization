@@ -38,13 +38,11 @@ int main(int argc, char **argv) {
 	}
 
 
-	char * prtzExtension;
-	char * prtz = (char *)malloc(sizeof(char)*(strlen(argv[2])+5));
+	char * prtz = (char *)malloc(sizeof(char)*(strlen(argv[2])+10));
 	{
-		prtzExtension = "cov";
 		prtz[0] = '\0';
 		strcat(prtz,argv[2]);
-		strcat(prtz,"."); strcat(prtz,prtzExtension);
+		strcat(prtz,".cov");
 		FILE *testCoverageFile = fopen(prtz,"w");
 		saveTestCoverage(testCoverageFile,fsmTest);
 		fflush(testCoverageFile);
@@ -52,28 +50,22 @@ int main(int argc, char **argv) {
 
 	}
 
-	char * mode = argv[3];
-	if(mode == "-gmdp"){
-		mode = "gmdp";
+	prtz[0] = '\0';
+	strcat(prtz,argv[2]);
+	if(strcmp(argv[3],"-gmdp") == 0){
+		strcat(prtz,".gmdp.test");
 		prioritization_gmdp(fsmTest);
 	}else{
-		mode = "lmdp";
+		strcat(prtz,".lmdp.test");
 		prioritization_lmdp(fsmTest);
 	}
 
-	prtzExtension = "test";
-	prtz[0] = '\0';
-	strcat(prtz,argv[2]);
-	strcat(prtz,"."); strcat(prtz,mode);
-	strcat(prtz,"."); strcat(prtz,prtzExtension);
 	testPrtzFile = fopen(prtz,"w");
 	saveTest(testPrtzFile,fsmTest);
 	fclose(testPrtzFile);
 
 	{
-		prtzExtension = ".cov";
-		prtz[0] = '\0';
-		strcat(prtz,argv[2]); strcat(prtz,"."); strcat(prtz,mode); strcat(prtz,prtzExtension);
+		strcat(prtz,".cov");
 		FILE *testCoverageFile = fopen(prtz,"w");
 		saveTestCoverage(testCoverageFile,fsmTest);
 		fclose(testCoverageFile);
