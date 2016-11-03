@@ -17,7 +17,7 @@ void loadFsm(FILE* f,FsmModel &fsm){
 	int in;
 	int out;
 	int from;
-	std::map<int,FsmState> stMap;
+	std::map<int,FsmState*> stMap;
 	std::set<int> inSet,outSet;
 	FsmState *f_st,*t_st;
 	FsmTransition *tr;
@@ -25,21 +25,22 @@ void loadFsm(FILE* f,FsmModel &fsm){
 		fscanf(f,"%d -- %d / %d -> %d",&from,&in,&out,&to);
 		//printf("---\n");
 		//printf("FROM: %d\n IN: %d\n OUT: %d\n TO: %d\n",from,in,out,to);
-		std::map<int,FsmState>::iterator it = stMap.find(from);
+		std::map<int,FsmState*>::iterator it = stMap.find(from);
 		if(it == stMap.end()){
 			f_st = new FsmState(from);
-			stMap[from] =*f_st;
+			stMap[from] =f_st;
+//			printf("address: %p %p\n",stMap[from],f_st);
 			fsm.addState(*f_st);
 		}else{
-			f_st = &stMap[from];
+			f_st = stMap[from];
 		}
 		it = stMap.find(to);
 		if(it == stMap.end()){
 			t_st = new FsmState(to);
-			stMap[to] =*t_st;
+			stMap[to] =t_st;
 			fsm.addState(*t_st);
 		}else{
-			t_st = &stMap[to];
+			t_st = stMap[to];
 		}
 		if(inSet.insert(in).second){
 			fsm.getIn().push_back(in);
@@ -48,9 +49,9 @@ void loadFsm(FILE* f,FsmModel &fsm){
 			fsm.getOut().push_back(out);
 		}
 		if(fsm.getInitState() == nullptr){
-			fsm.setInitState(&stMap[from]);
+			fsm.setInitState(stMap[from]);
 		}
-		tr = new FsmTransition (f_st,in,out,f_st);
+		tr = new FsmTransition (f_st,in,out,t_st);
 		printf("\t%d -- %d / %d -> %d (@%p) \n"
 				,(*(*tr).getFrom()).getId()
 				,(*tr).getIn()

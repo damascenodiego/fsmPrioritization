@@ -17,26 +17,26 @@ class FsmModel;
 
 class FsmState{
 	int id;
-	std::map<int,FsmTransition> in;
-	std::map<int,FsmTransition> out;
+	std::map<int,FsmTransition*> in;
+	std::map<int,FsmTransition*> out;
 public:
 	FsmState(){ id = -1;}
 	FsmState(int i) : id(i) {
 			printf("--- State %d created @ %p\n",id,this);
 		}
 	~FsmState() {
-			//printf("--- State %d deleted @ %p\n",id,this);
+			printf("--- State %d deleted @ %p\n",id,this);
 		}
 	void setId(int i) {id = i;}
 	int & getId()			{return id;}
-	std::map<int,FsmTransition> & getIn()	{return in;}
-	std::map<int,FsmTransition> & getOut()	{return out;}
+	std::map<int,FsmTransition*> & getIn()	{return in;}
+	std::map<int,FsmTransition*> & getOut()	{return out;}
 	void print(){
 
 		printf("\tState%d (@%p)\n",getId(),this);
 		printf("\t\tReaches %d states: ", getOut().size());
 //		for(auto i : getOut()){
-//			printf("%d\t",i.second.getTo().getId());
+//			printf("%d\t",(*(*(i.second)).getTo()).getId());
 //		}
 		printf("\n");
 		printf("\t\tReached by %d states: ", getIn().size());
@@ -60,10 +60,10 @@ public:
 	FsmTransition(FsmState *f,int i, int o, FsmState *t) : fr(f), in(i) ,out(o), to(t) {
 //		printf("########## DEBUG  - ini ##########\n");
 //		f.print();
-		(*f).getOut()[i] = *this;
+		(*f).getOut()[i] = this;
 //		f.print();
 //		printf("########## DEBUG  - end ##########\n");
-		(*t).getIn()[i] = *this;
+		(*t).getIn()[i] = this;
 
 	}
 	FsmState * getFrom() 	{return fr;}
@@ -83,17 +83,17 @@ public:
 
 
 class FsmModel{
-	std::list<FsmState> 		state;
-	std::list<FsmTransition> 	transition;
+	std::list<FsmState*> 		state;
+	std::list<FsmTransition*> 	transition;
 	FsmState 	*initSt = nullptr;
 	std::list<int> fsmIn;
 	std::list<int> fsmOut;
 public:
 	FsmModel(){};
-	void addState(FsmState &item)			{ state.push_back(item) ; }
-	void addTransition(FsmTransition &item)	{ transition.push_back(item); }
-	std::list<FsmState> & 		getState()	 {return state;}
-	std::list<FsmTransition> & getTransition() {return transition;}
+	void addState(FsmState &item)			{ state.push_back(&item) ; }
+	void addTransition(FsmTransition &item)	{ transition.push_back(&item); }
+	std::list<FsmState*> & 		getState()	 {return state;}
+	std::list<FsmTransition*> & getTransition() {return transition;}
 	FsmState* getInitState()		{return initSt;}
 	void setInitState(FsmState *s)		{initSt = s;}
 	std::list<int> & getIn()	{return fsmIn;}
