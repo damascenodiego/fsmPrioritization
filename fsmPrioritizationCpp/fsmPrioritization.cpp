@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 	prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 
 	strcat(prtz,argv[2]);
-	if(argc > 2){
+	if(argc > 3){
 		strcat(prtz,".gmdp.test");
 		prioritization_gmdp(fsmTest);
 	}else{
