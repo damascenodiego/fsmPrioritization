@@ -1,6 +1,6 @@
 #!/bin/sh
 
-np=5
+np=1
 fsm="sample.kk"
 test="sample.test"
 
@@ -15,5 +15,5 @@ fi
 #echo $order
 #echo $n2
 
-mpiCC fsmPrioritization.cpp -o fsmPrioritization -lm -fopenmp -std=c++0x -I ./ ./lib/fsmLib.h ./lib/fsmLib.cpp 
+mpic++ fsmPrioritization.cpp -o fsmPrioritization -lm -fopenmp -std=c++0x -I ./ ./lib/fsmLib.h ./lib/fsmLib.cpp 
 mpirun -np $np fsmPrioritization $fsm $test
