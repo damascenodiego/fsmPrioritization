@@ -188,7 +188,7 @@ class FsmTestSuite{
 	int 	length;
 	double 	avgLength;
 public:
-	FsmTestSuite() { length = avgLength = 0;}
+	FsmTestSuite() { model = nullptr; length = avgLength = 0;}
 	~FsmTestSuite() {
 		for(auto i : getTestCase()) delete i;
 		testCase.clear();

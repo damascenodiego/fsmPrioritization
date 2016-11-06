@@ -128,7 +128,7 @@ FsmTestSuite* loadTest(FILE* f,FsmModel *m = nullptr){
 
 void saveTest(FILE* f,FsmTestSuite* ts){
 	rewind(f);
-	int count = 0;
+	//int count = 0;
 	for(FsmTestCase *it : ts->getTestCase()){
 		for(int i : (it)->getInput()){
 			fprintf(f,"%03d",i);
@@ -142,15 +142,15 @@ void saveTest(FILE* f,FsmTestSuite* ts){
 void saveTestCoverage(FILE* f,FsmTestSuite* ts){
 	std::set<FsmTransition*> trSet;
 	std::set<FsmState*> stSet;
-	fprintf(f,"Transition Coverage (%d states)\t",ts->getModel()->getTransition().size());
-	fprintf(f,"State Coverage (%d states)\n",ts->getModel()->getState().size());
+	fprintf(f,"Transition Coverage (%lu states)\t",ts->getModel()->getTransition().size());
+	fprintf(f,"State Coverage (%lu states)\n",ts->getModel()->getState().size());
 	for(FsmTestCase *it : ts->getTestCase()){
 		for(FsmTransition *tr : it->getP()){
 			trSet.insert(tr);
 			stSet.insert(tr->getTo());
 			stSet.insert(tr->getFrom());
 		}
-		fprintf(f,"%d\t%d\n",trSet.size(),stSet.size());
+		fprintf(f,"%lu\t%lu\n",trSet.size(),stSet.size());
 	}
 }
 

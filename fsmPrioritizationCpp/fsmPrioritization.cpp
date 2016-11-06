@@ -102,7 +102,7 @@ void printModel(FsmModel *fsmModel){
 }
 
 void printTest(FsmTestSuite *fsmTest){
-	printf("Test suite: length: %d | noResets: %d |avg length %f (@%lu)\n",(*fsmTest).getLength(),(*fsmTest).getNoResets(),(*fsmTest).getAvgLength());
+	printf("Test suite: length: %d | noResets: %d |avg length %f (@%p)\n",(*fsmTest).getLength(),(*fsmTest).getNoResets(),(*fsmTest).getAvgLength(),fsmTest);
 	for (auto i : (*fsmTest).getTestCase()) {
 		(*i).print();
 	}
