@@ -9,6 +9,7 @@
 #include <cstring>
 #include <map>
 #include <set>
+#include <algorithm>
 #include "fsmLib.h"
 
 FsmModel * loadFsm(FILE* f){
@@ -200,6 +201,7 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
 double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 	std::set<int> t0Tr;
 	std::set<int> t1Tr;
+	std::set<int> diff;
 
 	int t0len = (*t0).testLength;
 	int t1len = (*t1).testLength;
@@ -212,21 +214,26 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 		t1Tr.insert((*t1).p[var]);
 	}
 
-	int ndt = 0;
+	//	int ndt = 0;
+	//
+	//	for(int t : t0Tr) {
+	//		if(t1Tr.find(t) == t1Tr.end())  ndt++;
+	//	}
+	//
+	//	for(int t : t1Tr) {
+	//		if(t0Tr.find(t) == t0Tr.end())  ndt++;
+	//	}
 
-	for(int t : t0Tr) {
-		if(t1Tr.find(t) == t1Tr.end())  ndt++;
-	}
+	//printf("ndt = %d\n",ndt);
+	//double ds = ndt / ((t0len+t1len)/2.0);
 
-	for(int t : t1Tr) {
-		if(t0Tr.find(t) == t0Tr.end())  ndt++;
-	}
+	set_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
+	double ds = diff.size() / ((t0Tr.size()+t1Tr.size())/2.0);
 
 	t0Tr.clear();
 	t1Tr.clear();
+	diff.clear();
 
-	//printf("ndt = %d\n",ndt);
-	double ds = ndt / ((t0len+t1len)/2.0);
 	return ds;
 
 }
@@ -242,13 +249,13 @@ void prioritization_lmdp(FsmTestSuite* ts){
 	std::list<FsmTestCase*>::iterator endi;
 	std::list<FsmTestCase*>::iterator endj;
 
-	double 								max_ds = -1;
 	std::list<FsmTestCase*>::iterator 	max_ti;
 	std::list<FsmTestCase*>::iterator 	max_tj;
-
+	double 								max_ds = -1;
 	double 	tmp_ds;
 	while (t.size()>0){
 		if(t.size()>1){
+			max_ds = -1;
 			endi = t.end(); endi--;
 			endj = t.end();
 			for(auto ti = t.begin(); ti != endi; ti++){
@@ -268,18 +275,24 @@ void prioritization_lmdp(FsmTestSuite* ts){
 			tcs.push_back(*max_tj);
 			t.erase(max_ti);
 			t.erase(max_tj);
+			//			printf("\tcalcSimpleSimilarity(t[%d],t[%d]) = %f \n", (*max_ti)->getId(),(*max_tj)->getId(),max_ds);
 			//			printf("t.size() = %d\n", t.size());
-			//			printf("tcs.size() = %d\n", tcs->size());
+			//			printf("tcs.size() = %d\n", tcs.size());
 		}else{
 			tcs.push_back(*t.begin());
 			t.erase(t.begin());
+			//			printf("t.size() = %d\n", t.size());
+			//			printf("tcs.size() = %d\n", tcs.size());
 		}
 
 	}
-	for(FsmTestCase *t : tcs) {
-		ts->getTestCase().pop_front();
-		ts->getTestCase().push_back(t);
-	}
+	ts->getTestCase().clear();
+	ts->getTestCase().merge(tcs);
+//	for(FsmTestCase *t : tcs) {
+////		printf("\tt[%d]\n", (t)->getId());
+//		ts->getTestCase().pop_front();
+//		ts->getTestCase().push_back(t);
+//	}
 }
 
 void prioritization_gmdp(FsmTestSuite* ts){
