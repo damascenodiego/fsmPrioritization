@@ -16,7 +16,7 @@
 
 using namespace std;
 
-int main(int argc, char **argv) {
+int main2(int argc, char **argv) {
 
 	int     my_rank, num_proc, parent_rank;
 	char 	filename[20]; // used just when debugging
