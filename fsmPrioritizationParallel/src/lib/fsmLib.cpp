@@ -380,3 +380,42 @@ int toTriangMatrix(int xpos,int ypos,int noReset){
 	tmPos+= j;
 	return tmPos;
 }
+
+// code below was taken from
+// http://stackoverflow.com/questions/14690481/how-to-know-the-all-the-ranks-of-the-processor-that-are-part-of-a-communicator-i
+void print_comm_ranks(MPI_Comm comm, FILE*f) {
+	MPI_Group grp, world_grp;
+
+	int my_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+
+	MPI_Comm_group(MPI_COMM_WORLD, &world_grp);
+	MPI_Comm_group(comm, &grp);
+
+	int grp_size;
+
+	MPI_Group_size(grp, &grp_size);
+
+	int *ranks = (int*)malloc(grp_size * sizeof(int));
+	int *world_ranks = (int*)malloc(grp_size * sizeof(int));
+
+	for (int i = 0; i < grp_size; i++)
+		ranks[i] = i;
+
+	MPI_Group_translate_ranks(grp, grp_size, ranks, world_grp, world_ranks);
+
+	for (int i = 0; i < grp_size; i++){
+		if(f == nullptr){
+			fprintf(stderr,"(RANK %d) \t comm[%d] has world rank %d\n", my_rank,i, world_ranks[i]);
+		}else{
+			fprintf(f,"(RANK %d) \t comm[%d] has world rank %d\n", my_rank, i, world_ranks[i]);
+		}
+	}
+
+
+	free(ranks); free(world_ranks);
+
+	MPI_Group_free(&grp);
+	MPI_Group_free(&world_grp);
+}

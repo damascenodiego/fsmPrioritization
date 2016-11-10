@@ -13,6 +13,7 @@
 
 #include <list>
 #include <map>
+#include <mpi.h>
 
 class FsmState;
 class FsmTransition;
@@ -218,4 +219,5 @@ void prioritization_lmdp(FsmTestSuite* ts);
 void prioritization_gmdp(FsmTestSuite* ts);
 void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum);
 int toTriangMatrix(int xpos,int ypos,int noReset);
+void print_comm_ranks(MPI_Comm comm, FILE*f);
 #endif /* LIB_FSMLIB_H_ */
