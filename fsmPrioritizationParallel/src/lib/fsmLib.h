@@ -217,5 +217,5 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1);
 void prioritization_lmdp(FsmTestSuite* ts);
 void prioritization_gmdp(FsmTestSuite* ts);
 void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum);
-
+int toTriangMatrix(int xpos,int ypos,int noReset);
 #endif /* LIB_FSMLIB_H_ */

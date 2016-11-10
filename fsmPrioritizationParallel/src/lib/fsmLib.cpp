@@ -362,3 +362,21 @@ void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum){
 		if(ds_sum[t->getId()] >= 0.0)ds_sum[t->getId()] += calcSimpleSimilarity(t,tc);
 	}
 }
+
+int toTriangMatrix(int xpos,int ypos,int noReset){
+//	fprintf(stderr,"(%d,%d)\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos);
+	int tmPos = 0;
+	int i = (xpos<ypos)? xpos : ypos;
+	int j = ((xpos>ypos)? xpos : ypos)-i;
+	int lTot = noReset-1;
+//	fprintf(stderr,"(%d,%d) = %d\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos,tmPos);
+
+	while(i > 0){
+		tmPos+= lTot;
+//		fprintf(stderr,"(%d,%d) = %d\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos,tmPos);
+		lTot--;
+		i--;
+	}
+	tmPos+= j;
+	return tmPos;
+}

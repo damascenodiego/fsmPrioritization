@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstring>
 #include "lib/fsmLib.h"
+#include <time.h>
 
 using namespace std;
 
@@ -38,39 +39,44 @@ int main(int argc, char **argv) {
 	}
 
 
-	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
-	{
-		strcat(prtz,argv[2]);
-		strcat(prtz,".cov");
-		FILE *testCoverageFile = fopen(prtz,"w");
-		saveTestCoverage(testCoverageFile,fsmTest);
-		fflush(testCoverageFile);
-		fclose(testCoverageFile);
+	//	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
+	//	{
+	//		strcat(prtz,argv[2]);
+	//		strcat(prtz,".cov");
+	//		FILE *testCoverageFile = fopen(prtz,"w");
+	//		saveTestCoverage(testCoverageFile,fsmTest);
+	//		fflush(testCoverageFile);
+	//		fclose(testCoverageFile);
+	//
+	//	}
+	//	free(prtz);
+	//	prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 
-	}
-	free(prtz);
-	prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
+	//	strcat(prtz,argv[2]);
+	//	if(argc > 3){
+	//		strcat(prtz,".gmdp.test");
+	//		prioritization_gmdp(fsmTest);
+	//	}else{
+	//		strcat(prtz,".lmdp.test");
+	time_t start; time(&start);
+	prioritization_lmdp(fsmTest);
+	time_t stop; time(&stop);
+	double diff = difftime(stop, start);
+	printf("It took you %g seconds to type that\n", diff);
 
-	strcat(prtz,argv[2]);
-	if(argc > 3){
-		strcat(prtz,".gmdp.test");
-		prioritization_gmdp(fsmTest);
-	}else{
-		strcat(prtz,".lmdp.test");
-		prioritization_lmdp(fsmTest);
-	}
+	//	}
 
-	testPrtzFile = fopen(prtz,"w");
-	saveTest(testPrtzFile,fsmTest);
-	fclose(testPrtzFile);
-
-	{
-		strcat(prtz,".cov");
-		FILE *testCoverageFile = fopen(prtz,"w");
-		saveTestCoverage(testCoverageFile,fsmTest);
-		fclose(testCoverageFile);
-
-	}
+	//	testPrtzFile = fopen(prtz,"w");
+	//	saveTest(testPrtzFile,fsmTest);
+	//	fclose(testPrtzFile);
+	//
+	//	{
+	//		strcat(prtz,".cov");
+	//		FILE *testCoverageFile = fopen(prtz,"w");
+	//		saveTestCoverage(testCoverageFile,fsmTest);
+	//		fclose(testCoverageFile);
+	//
+	//	}
 	delete(fsmModel);
 	delete(fsmTest);
 
