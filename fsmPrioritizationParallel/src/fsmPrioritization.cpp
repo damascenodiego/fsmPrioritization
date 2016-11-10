@@ -25,6 +25,44 @@ const static int RMV_PAIR 			= 003;
 const static int AVAILABLE_PROC		= 004;
 
 
+void print_comm_ranks(MPI_Comm comm, FILE*f)
+{
+	MPI_Group grp, world_grp;
+
+	int my_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+
+	MPI_Comm_group(MPI_COMM_WORLD, &world_grp);
+	MPI_Comm_group(comm, &grp);
+
+	int grp_size;
+
+	MPI_Group_size(grp, &grp_size);
+
+	int *ranks = (int*)malloc(grp_size * sizeof(int));
+	int *world_ranks = (int*)malloc(grp_size * sizeof(int));
+
+	for (int i = 0; i < grp_size; i++)
+		ranks[i] = i;
+
+	MPI_Group_translate_ranks(grp, grp_size, ranks, world_grp, world_ranks);
+
+	for (int i = 0; i < grp_size; i++){
+		if(f == nullptr){
+			fprintf(stderr,"(RANK %d) \t comm[%d] has world rank %d\n", my_rank,i, world_ranks[i]);
+		}else{
+			fprintf(f,"(RANK %d) \t comm[%d] has world rank %d\n", my_rank, i, world_ranks[i]);
+		}
+	}
+
+
+	free(ranks); free(world_ranks);
+
+	MPI_Group_free(&grp);
+	MPI_Group_free(&world_grp);
+}
+
 int main(int argc, char **argv) {
 
 	//	struct loc_val{
@@ -49,21 +87,78 @@ int main(int argc, char **argv) {
 	fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);
 	fprintf(trace, "Total of processes: %d \n", num_proc);
 
+	int tmp = (int) ((0.5 + sqrt(0.25+2*(num_proc))));
+	int noResets = tmp;
+	int x = 0;
+	int y = my_rank;
+	tmp--;
+	while (y > tmp ){
+		x++;
+		y -= tmp;
+		tmp--;
+	}
+
+	y += x ;
+
+
+	fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);
+	fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);
+	fflush(trace);
+
+
+	int out;
+
+	//	MPI_Comm * x_color 		= (MPI_Comm *) malloc(sizeof(MPI_Comm));
+	//	MPI_Comm * y_color 		= (MPI_Comm *) malloc(sizeof(MPI_Comm));
+	//	//
+	//	//
+	//	out = MPI_Comm_split(MPI_COMM_WORLD, (x+1), my_rank, x_color);
+	//	fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, row_color[%d]) = %s (%d)\n",my_rank,(x+1),my_rank,x,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+	//
+	//	out = MPI_Comm_split(MPI_COMM_WORLD, (y+1)*10, my_rank, y_color);
+	//	fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, col_color[%d]) = %s (%d)\n",my_rank,(y+1)*10,my_rank,y,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+
+	//	out = MPI_Comm_split(MPI_COMM_WORLD, (x+1), 0, x_color);
+	//	fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, row_color[%d]) = %s (%d)\n",my_rank,(x+1),my_rank,x,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+	//
+	//	out = MPI_Comm_split(MPI_COMM_WORLD, (y+1)*10, 0, y_color);
+	//	fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, col_color[%d]) = %s (%d)\n",my_rank,(y+1)*10,my_rank,y,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+
+	MPI_Comm * row_color 		= (MPI_Comm *) malloc(noResets*sizeof(MPI_Comm));
+	MPI_Comm * col_color 		= (MPI_Comm *) malloc(noResets*sizeof(MPI_Comm));
+
+
+	//	MPI_Comm * comm_0 = (MPI_Comm *) malloc(noResets*sizeof(MPI_Comm));
+	//	for(int var = 0; var < noResets; var++){
+	//		out = MPI_Comm_split(MPI_COMM_WORLD, (var+1), 00, &comm_0[var]);
+	//		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, row_color[%d]) = %s (%d)\n",
+	//				my_rank,(var+1),		00,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+
+	//		out = MPI_Comm_split(MPI_COMM_WORLD, (var+1)*10, 00, &comm_0[var]);
+	//		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, col_color[%d]) = %s (%d)\n",
+	//				my_rank,(var+1)*10,		00,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+
+	//			for(int var2 = var+1; var2 < noResets; var2++){
+	//				out = MPI_Comm_split(MPI_COMM_WORLD, (var+1), _rank, &row_color[var]);
+	//				fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),_rank,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+	//				out = MPI_Comm_split(MPI_COMM_WORLD, (var2+1)*10, _rank, &col_color[var2]);
+	//				fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, col_color[%02d]) = %s (%d)\n",my_rank,(var2+1),_rank,var2,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+	//				_rank++;
+	//			}
+	//
+	//}
+
 
 	//	SimpleFsmTestCase *ti = nullptr;
 	//	SimpleFsmTestCase *tj = nullptr;
-	//
-	//	MPI_Comm * comm_0 		= (MPI_Comm *) malloc(sizeof(MPI_Comm));
-	//	MPI_Comm_split(MPI_COMM_WORLD, 0, my_rank, comm_0);
-	//
+
 	if (my_rank == 0) {
 		FILE *fsmFile;
 		FILE *testFile;
-		FILE *testPrtzFile;
+		//		FILE *testPrtzFile;
 
 		FsmModel *fsmModel;
 		FsmTestSuite *fsmTest;
-
 
 		if(argc >= 3){
 			fsmFile = fopen(argv[1],"r");
@@ -80,306 +175,131 @@ int main(int argc, char **argv) {
 			}
 			fclose(testFile);
 		}else{
-			return (1);
+			MPI_Abort(MPI_COMM_WORLD,1);
+		}
+
+		// broadcast tests
+
+		for (int var = 0; var < noResets-1; ++var) {
+			out = MPI_Comm_split(MPI_COMM_WORLD, (var+1),    0, &row_color[var]);
+			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+		}
+
+		for (int var = 1; var < noResets; ++var) {
+			out = MPI_Comm_split(MPI_COMM_WORLD, (var+1)*10,    0, &col_color[var]);
+			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+
+		for (int var = 0; var < noResets-1; ++var) {
+			fprintf(trace,"(RANK %d) \t row_color[%d]\n",my_rank,var);
+			print_comm_ranks(row_color[var],trace);
+		}
+		//
+		for (int var = 1; var < noResets; ++var) {
+			fprintf(trace,"(RANK %d) \t col_color[%d]\n",my_rank,var);
+			print_comm_ranks(col_color[var],trace);
 		}
 
 
-		int out;
-		int local,lr;
-		int noResets = fsmTest->getTestCase().size();
-		MPI_Comm * comm_0 		= (MPI_Comm *) malloc(sizeof(MPI_Comm));
-
-		for (int var = 1; var < num_proc; ++var) {
-			out = MPI_Comm_split(MPI_COMM_WORLD, 0, var, comm_0);
-			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-			fflush(trace);
-			//			MPI_Comm_size(*comm_0, &local);
-			//			MPI_Comm_rank(*comm_0, &lr);
-			//			fprintf(trace,"(RANK %d ) Color %d \t Local rank %d \t MPI_Comm_size %d\n",my_rank,0,lr,local);
-			fflush(trace);
-		}
-
-		MPI_Comm * comm_x 		= (MPI_Comm *) malloc(noResets*sizeof(MPI_Comm));
-		auto endi = fsmTest->getTestCase().end(); endi--;
-		for (auto xpos = fsmTest->getTestCase().begin(); xpos != endi; ++xpos) {
-			auto ypos = xpos;
-			for (ypos++; ypos != fsmTest->getTestCase().end(); ++ypos) {
-				int xid = (*xpos)->getId();
-				int yid = (*ypos)->getId();
-				int nproc = toTriangMatrix(xid,yid,noResets);
-
-				fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) (BEGIN)\n",my_rank,xid+1,nproc+1);
-				out = MPI_Comm_split(MPI_COMM_WORLD, xid+1, nproc+1, &comm_x[xid]);
-				fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,xid+1,nproc+1,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-				fflush(trace);
-
-				fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) (BEGIN)\n",my_rank,yid+1,nproc+1);
-				out = MPI_Comm_split(MPI_COMM_WORLD, yid+1, nproc+1, &comm_x[yid]);
-				fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,yid+1,nproc,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-				fflush(trace);
-			}
-		}
-		//
-		//
-		//		int sendbuf;
-		//
-		//		MPI_Comm * comm_undef 	= (MPI_Comm *) malloc(sizeof(MPI_Comm));
-		//
-		//		//
-		//		int rank_id=0;
-		//
-		///*		for (auto xpos = fsmTest->getTestCase().begin(); xpos != fsmTest->getTestCase().end(); ++xpos) {
-		//			for (auto ypos = xpos; ypos != fsmTest->getTestCase().end(); ++ypos) {
-		//				ypos++;
-		//				if((*xpos)->getId()!=(*ypos)->getId()){
-		//					int nproc = toTriangMatrix((*xpos)->getId(),(*ypos)->getId(),noResets);
-		//					out = MPI_Comm_split(MPI_COMM_WORLD, (*xpos)->getId(), nproc, &comm_x[(*xpos)->getId()]);
-		//					fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, comm_x) = %s (%d)\n",my_rank,(*xpos)->getId(),nproc,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-		//
-		//					out = MPI_Comm_split(MPI_COMM_WORLD, (*ypos)->getId(), nproc, &comm_y[(*ypos)->getId()]);
-		//					fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, comm_x) = %s (%d)\n",my_rank,(*ypos)->getId(),nproc,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+		//			for(int var = 0; var < noResets-1; var++){
+		//				for(int var2 = 1; var2 < noResets; var2++){
+		//					out = MPI_Comm_split(MPI_COMM_WORLD, (var+1),    0, &row_color[var]);
+		//					//			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+		//					out = MPI_Comm_split(MPI_COMM_WORLD, (var2+1)*10, 0, &col_color[var2]);
+		//					//			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, col_color[%02d]) = %s (%d)\n",my_rank,(var2+1)*10,0,var2,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
 		//				}
-		//				sendbuf = (*xpos)->getId();
-		//				//			MPI_Ibcast(&sendbuf, 1, MPI_INT, 0, comm_x[sendbuf],reqx);
-		//				MPI_Bcast(&sendbuf, 1, MPI_INT, 0, comm_x[sendbuf]);
-		//				fprintf(trace,"(RANK %d) \t MPI_Bcast: t_%d (END)\n",my_rank,sendbuf);
-		//
-		//				sendbuf = (*ypos)->getId();
-		//				//			MPI_Ibcast(&sendbuf, 1, MPI_INT, 0, comm_y[sendbuf],reqy);
-		//				MPI_Bcast(&sendbuf, 1, MPI_INT, 0, comm_y[sendbuf]);
-		//				fprintf(trace,"(RANK %d) \t MPI_Bcast: t_%d (END)\n",my_rank,sendbuf);
-		//				fflush(trace);
-		//
 		//			}
-		//		}*/
-		//		for (int varx = 0; varx < noResets-1; ++varx) {
-		//			for (int vary = varx+1; vary < noResets; ++vary) {
-		//				if((varx == x) || (vary == y)){
-		//					if((varx == x)){
-		//						out = MPI_Comm_split(MPI_COMM_WORLD, x+1, rank_id, comm_x);
-		//						fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, comm_x) = %s (%d)\n",my_rank,x,rank_id,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-		//					}
-		//					if((vary == y)){
-		//						out = MPI_Comm_split(MPI_COMM_WORLD, y+1, rank_id, comm_y);
-		//						fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, comm_y) = %s (%d)\n",my_rank,y,rank_id,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-		//					}
+		//
+		//			for(int var = 0; var < noResets-1; var++){
+		//					fprintf(trace,"(RANK %d) \t row_color[%d]\n",my_rank,var);
+		//					print_comm_ranks(row_color[var],trace);
 		//				}
-		//				if(((varx != x)) && (vary != y)){
-		//					out = MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank_id, comm_undef);
-		//					fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, %d, comm_undef) = %s (%d)\n",my_rank,rank_id,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-		//				}
-		//				fflush(trace);
-		//				rank_id++;
-		//			}
+		//	for(int var2 = 1; var2 < noResets; var2++){
+		//		fprintf(trace,"(RANK %d) \t col_color[%d]\n",my_rank,var2);
+		//		print_comm_ranks(col_color[var2],trace);
+		//	}
+		//		for(int var = 0; var < noResets-1; var++){
+		//			fprintf(trace,"(RANK %d) \t row_color[%d]\n",my_rank,var);
+		//			print_comm_ranks(row_color[var],trace);
 		//		}
-		//
-		//
-		//		//		int local,lr;
-		//		//		MPI_Comm_size(*comm_x, &local);
-		//		//		MPI_Comm_rank(*comm_x, &lr);
-		//		//		fprintf(trace,"(RANK %d ) Color %d \t Local rank %d \t MPI_Comm_size %d\n",my_rank,sendbuf,lr,local); fflush(trace);
-		//		//		fflush(trace);
-		//		//
-		//		//		MPI_Comm_size(*comm_y, &local);
-		//		//		MPI_Comm_rank(*comm_y, &lr);
-		//		//		fprintf(trace,"(RANK %d ) Color %d \t Local rank %d \t MPI_Comm_size %d\n",my_rank,sendbuf,lr,local); fflush(trace);
-		//		//		fflush(trace);
-		//		//
-		//		//		MPI_Barrier(MPI_COMM_WORLD);
-		//		//
-		////		MPI_Request * reqx = (MPI_Request *) malloc(sizeof(MPI_Request));
-		////		MPI_Request * reqy = (MPI_Request *) malloc(sizeof(MPI_Request));
-		////
-		////		for(auto tc = fsmTest->getTestCase().begin(); tc != fsmTest->getTestCase().end(); tc++){
-		////			fprintf(trace,"(RANK %d) \t MPI_Bcast: t_%d (BEGIN)\n",my_rank,sendbuf);
-		////			fflush(trace);
-		////
-		////			sendbuf = (*tc)->getId();
-		////			if(sendbuf == x){
-		////				ti = (*tc)->getSimpleFormat();
-		////			}else if(sendbuf == y){
-		////				tj = (*tc)->getSimpleFormat();
-		////			}
-		////			MPI_Bcast(&sendbuf, 1, MPI_INT, 0, comm_x[sendbuf]);
-		////			MPI_Bcast(&sendbuf, 1, MPI_INT, 0, comm_y[sendbuf]);
-		////			//			MPI_Ibcast(&sendbuf, 1, MPI_INT, 0, comm_x[sendbuf],reqx);
-		////			//			MPI_Ibcast(&sendbuf, 1, MPI_INT, 0, comm_y[sendbuf],reqy);
-		////
-		////			fprintf(trace,"(RANK %d) \t MPI_Bcast: t_%d (END)\n",my_rank,sendbuf);
-		////			fflush(trace);
-		////		}
-		//
-		//		fflush(trace);
-		//		delete(fsmModel);
-		//		delete(fsmTest);
-		//
-		//
+		//		for(int var2 = 1; var2 < noResets; var2++){
+		//			fprintf(trace,"(RANK %d) \t col_color[%d]\n",my_rank,var2);
+		//			print_comm_ranks(col_color[var2],trace);
+		//		}
+		for(int var = 0; var < noResets-1; var++){
+			int sendbuf = -100*(var+1);
+			fprintf(trace,"(RANK %d) \t row_color[%d] = ",my_rank,var);
+			MPI_Bcast(&sendbuf,1,MPI_INT,0,row_color[var]);
+			fprintf(trace,"%d\n",sendbuf);
+		}
+		for(int var2 = 1; var2 < noResets; var2++){
+			int sendbuf = -100*(var2+1);
+			fprintf(trace,"(RANK %d) \t col_color[%d] = ",my_rank,var2);
+			MPI_Bcast(&sendbuf,1,MPI_INT,0,col_color[var2]);
+			fprintf(trace,"%d\n",sendbuf);
+		}
+		//		for (int id = 0; id < noResets; ++id) {
+		//			int sendbuf = -100*(id+1);
+		//			fprintf(trace,"(RANK %d) \t sendbuf[%d] = ",my_rank,id);
+		//			MPI_Bcast(&sendbuf,1,MPI_INT,0,comm_0[id]);
+		//			fprintf(trace,"%d\n",sendbuf);
+		//		}
 	}else{
-		int tmp = (int) ((0.5 + sqrt(0.25+2*(num_proc))));
-		int noResets = tmp;
-		int x = 0;
-		int y = my_rank;
-		tmp--;
-		while (y > tmp ){
-			x++;
-			y -= tmp;
-			tmp--;
-		}
 
-		y += x ;
+		MPI_Status status;
 
+		int rcv_x = -9999;
+		int rcv_y = -9999;
+		int color;
 
-		fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);
-		fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);
-		fflush(trace);
-
-		int out;
-
-		MPI_Comm * comm_0 		= (MPI_Comm *) malloc(sizeof(MPI_Comm));
-		int local,lr;
-		for (int var = 1; var < num_proc; ++var) {
-			out = MPI_Comm_split(MPI_COMM_WORLD, 0, var, comm_0);
-			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-			fflush(trace);
-			//			MPI_Comm_size(*comm_0, &local);
-			//			MPI_Comm_rank(*comm_0, &lr);
-			//			fprintf(trace,"(RANK %d ) Color %d \t Local rank %d \t MPI_Comm_size %d\n",my_rank,0,lr,local);
-			//			fflush(trace);
-		}
-
-
-		MPI_Comm * comm_x 		= (MPI_Comm *) malloc(noResets*sizeof(MPI_Comm));
-		MPI_Comm * comm_y 		= (MPI_Comm *) malloc(noResets*sizeof(MPI_Comm));
-
-		for (int xpos = 0; xpos < noResets -1 ; ++xpos) {
-			for (auto ypos = xpos+1; ypos < noResets; ++ypos) {
-				int xid = (xpos);
-				int yid = (ypos);
-				int nproc = toTriangMatrix(xid,yid,noResets);
-
-				out = MPI_Comm_split(MPI_COMM_WORLD, xid+1, nproc+1, &comm_x[xid]);
-				fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,xid+1,nproc,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-				fflush(trace);
-
-				out = MPI_Comm_split(MPI_COMM_WORLD, yid+1, nproc+1, &comm_x[yid]);
-				fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,yid+1,nproc,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-				fflush(trace);
+		for (int var = 0; var < noResets-1; ++var) {
+			if(var != x){
+				color = MPI_UNDEFINED;
+			}else{
+				color = (var+1) ;
 			}
+			out = MPI_Comm_split(MPI_COMM_WORLD, color,    my_rank, &row_color[var]);
+			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
 		}
 
+		for (int var = 1; var < noResets; ++var) {
+			if(var != y){
+				color = MPI_UNDEFINED;
+			}else{
+				color = (var+1)*10 ;
+			}
+			out = MPI_Comm_split(MPI_COMM_WORLD, color,    my_rank,  &col_color[var]);
+			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
 
+		/*
+		MPI_Request *reqx = (MPI_Request *) malloc(sizeof(MPI_Request));
+		MPI_Request *reqy = (MPI_Request *) malloc(sizeof(MPI_Request));
 
-/*		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,0,my_rank,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-		out = MPI_Comm_split(MPI_COMM_WORLD, x+1, my_rank, comm_x);
-		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,x+1,my_rank,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+		MPI_Ibcast(&rcv_x,1,MPI_INT,0,row_color[x],reqx);
+		MPI_Ibcast(&rcv_y,1,MPI_INT,0,col_color[y],reqy);
+		MPI_Wait(reqx,&status);
+		MPI_Wait(reqy,&status);
+		 */
 
-		out = MPI_Comm_split(MPI_COMM_WORLD, y+1, my_rank, comm_y);
-		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d) = %s (%d)\n",my_rank,y+1,my_rank,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-*/
+		MPI_Bcast(&rcv_x,1,MPI_INT,0,row_color[x]);
+		fprintf(trace,"(RANK %d) \t row_color[%d] = %d\n",my_rank,x,rcv_x); fflush(trace);
 
-
-		//		MPI_Comm_split(MPI_COMM_WORLD, x, 0, comm_x);
-		//		MPI_Comm_split(MPI_COMM_WORLD, y, 0, comm_y);
-		//		//		int out;
-		//		//		int rank_id=0;
-		//		//		for (int varx = 0; varx < noResets-1; ++varx) {
-		//		//			for (int vary = varx+1; vary < noResets; ++vary) {
-		//		//				if((varx == x) || (vary == y)){
-		//		//					if((varx == x)){
-		//		//						out = MPI_Comm_split(MPI_COMM_WORLD, x, rank_id, comm_x);
-		//		//						fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, comm_x) = %s (%d)\n",my_rank,x,rank_id,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-		//		//					}
-		//		//					if((vary == y)){
-		//		//						out = MPI_Comm_split(MPI_COMM_WORLD, y, rank_id, comm_y);
-		//		//						fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %d, %d, comm_y) = %s (%d)\n",my_rank,y,rank_id,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-		//		//					}
-		//		//				}
-		//		//				if(((varx != x)) && (vary != y)){
-		//		//					out = MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank_id, comm_undef);
-		//		//					fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, %d, comm_undef) = %s (%d)\n",my_rank,rank_id,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
-		//		//				}
-		//		//				//				out = MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank_id, comm_x);
-		//		//				fflush(trace);
-		//		//				rank_id++;
-		//		//			}
-		//		//		}
-		//
-		//		int local,lr;
-		//		MPI_Comm_size(*comm_x, &local);
-		//		MPI_Comm_rank(*comm_x, &lr);
-		//		fprintf(trace,"(RANK %d ) Color %d \t Local rank %d \t MPI_Comm_size %d\n",my_rank,x,lr,local);
-		//		fflush(trace);
-		//
-		//		MPI_Comm_size(*comm_y, &local);
-		//		MPI_Comm_rank(*comm_y, &lr);
-		//		fprintf(trace,"(RANK %d ) Color %d \t Local rank %d \t MPI_Comm_size %d\n",my_rank,y,lr,local);
-		//		fflush(trace);
-		//
-		//		//		MPI_Barrier(MPI_COMM_WORLD);
-		//
-		//		MPI_Status	status;
-		//		int rcvbuf_x = -999;
-		//		int rcvbuf_y = -999;
-		//		int rcvbuf_ptot = -999;
-		//
-		//		MPI_Request * reqx = (MPI_Request *) malloc(sizeof(MPI_Request));
-		//		MPI_Request * reqy = (MPI_Request *) malloc(sizeof(MPI_Request));
-		//
-		//		//		MPI_Ibcast(&rcvbuf_x, 1, MPI_INT, 0, *comm_x,reqx);
-		//		//		MPI_Ibcast(&rcvbuf_y, 1, MPI_INT, 0, *comm_y,reqy);
-		//		//		MPI_Wait(reqx,&status);
-		//		//		MPI_Wait(reqy,&status);
-		//
-		//		MPI_Bcast(&rcvbuf_x, 1, MPI_INT, MPI_ROOT, *comm_x);
-		//		fprintf(trace,"(RANK %d) \t MPI_Bcast: rcvbuf_x = t_%d  \n",my_rank,rcvbuf_x);
-		//		fflush(trace);
-		//		MPI_Bcast(&rcvbuf_y, 1, MPI_INT, MPI_ROOT, *comm_y);
-		//		fprintf(trace,"(RANK %d) \t MPI_Bcast: rcvbuf_y = t_%d  \n",my_rank,rcvbuf_y);
-		//		fflush(trace);
-		//
-		//		fprintf(trace, "(RANK %d) \t Test x = %d \n", my_rank,rcvbuf_x);
-		//		fprintf(trace, "(RANK %d) \t Test y = %d \n", my_rank,rcvbuf_y);
-		//
+		MPI_Bcast(&rcv_y,1,MPI_INT,0,col_color[y]);
+		fprintf(trace,"(RANK %d) \t col_color[%d] = %d\n",my_rank,y,rcv_y); fflush(trace);
 	}
 
 
+	//	MPI_Barrier(MPI_COMM_WORLD);
+	//
 
 	fflush(trace);
-
-
-
-
-
-	//	printf("----(RANK %d) \t THE END!!!---\n",my_rank);
+	printf("----(RANK %02d) \t THE END!!!---\n",my_rank);
 	MPI::Finalize();
 	exit(0);
 
 }
-void printModel(FsmModel *fsmModel){
-	printf("FsmModel @ %p\n",fsmModel);
-	printf("States:\t\t%zu\n",(*fsmModel).getState().size());
-	for (FsmState *i : (*fsmModel).getState()) {
-		(*i).print();
-	}
-	printf("Transitions:\t%zu\n",(*fsmModel).getTransition().size());
-	for (FsmTransition *i : (*fsmModel).getTransition()) {
-		(*i).print();
-		(*i).getFrom()->print();
-		(*i).getTo()->print();
-	}
-	printf("In:\t\t%zu\n",(*fsmModel).getIn().size());
-	for (int i : (*fsmModel).getIn()) {
-		printf("\t%d (@%p)\n",i,&i);
-	}
-	printf("Out:\t\t%zu\n",(*fsmModel).getOut().size());
-	for (int i : (*fsmModel).getOut()) {
-		printf("\t%d (@%p)\n",i,&i);
-	}
-}
 
-void printTest(FsmTestSuite *fsmTest){
-	printf("Test suite: length: %d | noResets: %d |avg length %f (@%p)\n",(*fsmTest).getLength(),(*fsmTest).getNoResets(),(*fsmTest).getAvgLength(),fsmTest);
-	for (auto i : (*fsmTest).getTestCase()) {
-		(*i).print();
-	}
-}
+
