@@ -208,6 +208,12 @@ public:
 	FsmModel* getModel() { return model;}
 };
 
+
+struct MPI_VAL_RANK{
+	double val;
+	int   rank;
+};
+
 FsmModel* loadFsm(FILE* f);
 FsmTestSuite* loadTest(FILE* f,FsmModel *m);
 void saveTest(FILE* f,FsmTestSuite* ts);
@@ -220,4 +226,5 @@ void prioritization_gmdp(FsmTestSuite* ts);
 void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum);
 int toTriangMatrix(int xpos,int ypos,int noReset);
 void print_comm_ranks(MPI_Comm comm, FILE*f);
+void calculateXY(int &x,int &y, int noResets, int my_rank);
 #endif /* LIB_FSMLIB_H_ */

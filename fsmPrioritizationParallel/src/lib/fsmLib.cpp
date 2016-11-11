@@ -288,11 +288,11 @@ void prioritization_lmdp(FsmTestSuite* ts){
 	}
 	ts->getTestCase().clear();
 	ts->getTestCase().merge(tcs);
-//	for(FsmTestCase *t : tcs) {
-////		printf("\tt[%d]\n", (t)->getId());
-//		ts->getTestCase().pop_front();
-//		ts->getTestCase().push_back(t);
-//	}
+	//	for(FsmTestCase *t : tcs) {
+	////		printf("\tt[%d]\n", (t)->getId());
+	//		ts->getTestCase().pop_front();
+	//		ts->getTestCase().push_back(t);
+	//	}
 }
 
 void prioritization_gmdp(FsmTestSuite* ts){
@@ -364,16 +364,16 @@ void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum){
 }
 
 int toTriangMatrix(int xpos,int ypos,int noReset){
-//	fprintf(stderr,"(%d,%d)\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos);
+	//	fprintf(stderr,"(%d,%d)\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos);
 	int tmPos = 0;
 	int i = (xpos<ypos)? xpos : ypos;
 	int j = ((xpos>ypos)? xpos : ypos)-i;
 	int lTot = noReset-1;
-//	fprintf(stderr,"(%d,%d) = %d\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos,tmPos);
+	//	fprintf(stderr,"(%d,%d) = %d\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos,tmPos);
 
 	while(i > 0){
 		tmPos+= lTot;
-//		fprintf(stderr,"(%d,%d) = %d\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos,tmPos);
+		//		fprintf(stderr,"(%d,%d) = %d\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos,tmPos);
 		lTot--;
 		i--;
 	}
@@ -418,4 +418,17 @@ void print_comm_ranks(MPI_Comm comm, FILE*f) {
 
 	MPI_Group_free(&grp);
 	MPI_Group_free(&world_grp);
+}
+
+void calculateXY(int &x,int &y, int noResets, int my_rank){
+	int tmp = noResets;
+	x = 0;
+	y = my_rank;
+	tmp--;
+	while ((y) > tmp ){
+		(x)++;
+		(y) -= tmp;
+		tmp--;
+	}
+	(y)  += (x) ;
 }
