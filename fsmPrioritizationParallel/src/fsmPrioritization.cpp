@@ -37,10 +37,20 @@ int main(int argc, char **argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
 
-	char 	filename[20]; // used just when debugging
+	time_t timer;
+	char buffer[26];
+	struct tm* tm_info;
+
+	time(&timer);
+	tm_info = localtime(&timer);
+
+	strftime(buffer, 26, "%Y_%m_%d_%H_%M", tm_info);
+
+
+	char 	filename[46]; // used just when debugging
 	FILE 	*trace;  // used just when debugging
 
-	sprintf(filename,"log/myrank_%02d.trace", my_rank);
+	sprintf(filename,"log/log_%s_rank_%02d.trace", buffer, my_rank);
 	trace = fopen(filename, "w");
 
 	int x;
@@ -93,6 +103,10 @@ int main(int argc, char **argv) {
 		}else{
 			MPI_Abort(MPI_COMM_WORLD,1);
 		}
+
+		double begin, end;
+
+		begin = MPI_Wtime();
 
 		// row_color is filled until (var < noResets-1)
 		// (n-1) groups to broadcast test cases for each row from process 0
@@ -204,6 +218,10 @@ int main(int argc, char **argv) {
 		}
 		fsmTest->getTestCase().clear();
 		fsmTest->getTestCase().merge(t_prtz);
+
+		end = MPI_Wtime();
+
+		fprintf(trace,"\nTIME %f\n",(end-begin)); fflush(trace);
 
 		char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 		strcat(prtz,argv[2]);
@@ -405,6 +423,7 @@ int main(int argc, char **argv) {
 
 	fprintf(trace,"----(RANK %02d) \t THE END!!!---\n",my_rank);
 	fflush(trace);
+	fclose(trace);
 	MPI::Finalize();
 	exit(0);
 

@@ -25,6 +25,19 @@ int main(int argc, char **argv) {
 	FsmModel *fsmModel;
 	FsmTestSuite *fsmTest;
 
+	char 	filename[20]; // used just when debugging
+	FILE 	*trace;  // used just when debugging
+
+	time_t timer;
+	char buffer[26];
+	struct tm* tm_info;
+
+	time(&timer);
+	tm_info = localtime(&timer);
+
+	strftime(buffer, 26, "%Y_%m_%d_%H_%M_%S", tm_info);
+	sprintf(filename,"log/log_%s.trace", buffer);
+	trace = fopen(filename, "w");
 
 	if(argc >= 3){
 		fsmFile = fopen(argv[1],"r");
@@ -58,11 +71,16 @@ int main(int argc, char **argv) {
 	//		prioritization_gmdp(fsmTest);
 	//	}else{
 	//		strcat(prtz,".lmdp.test");
-	time_t start; time(&start);
+	struct timespec start,stop;
+	clock_gettime(CLOCK_REALTIME, &start);
 	prioritization_lmdp(fsmTest);
-	time_t stop; time(&stop);
-	double diff = difftime(stop, start);
-	printf("It took you %g seconds to type that\n", diff);
+	clock_gettime(CLOCK_REALTIME, &stop);
+
+	double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
+
+	fprintf(trace,"\nTIME %f\n",diff);
+	fflush(trace);
+	fclose(trace);
 
 	//	}
 
