@@ -17,14 +17,11 @@ void printModel(FsmModel *fsmModel);
 void printTest(FsmTestSuite *fsmTest);
 
 int main(int argc, char **argv) {
-	FILE *fsmFile;
-	FILE *testFile;
-	FILE *testPrtzFile;
 
-
-	FsmModel *fsmModel;
-	FsmTestSuite *fsmTest;
-
+	/////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////
+	struct timespec start,stop;
+	clock_gettime(CLOCK_REALTIME, &start);
 	char 	filename[20]; // used just when debugging
 	FILE 	*trace;  // used just when debugging
 
@@ -36,8 +33,20 @@ int main(int argc, char **argv) {
 	tm_info = localtime(&timer);
 
 	strftime(buffer, 26, "%Y_%m_%d_%H_%M_%S", tm_info);
-	sprintf(filename,"log/log_%s.trace", buffer);
+	sprintf(filename,"log/logSerial_%s.trace", buffer);
 	trace = fopen(filename, "w");
+	/////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////
+
+
+	FILE *fsmFile;
+	FILE *testFile;
+	FILE *testPrtzFile;
+
+
+	FsmModel *fsmModel;
+	FsmTestSuite *fsmTest;
+
 
 	if(argc >= 3){
 		fsmFile = fopen(argv[1],"r");
@@ -71,16 +80,7 @@ int main(int argc, char **argv) {
 	//		prioritization_gmdp(fsmTest);
 	//	}else{
 	//		strcat(prtz,".lmdp.test");
-	struct timespec start,stop;
-	clock_gettime(CLOCK_REALTIME, &start);
 	prioritization_lmdp(fsmTest);
-	clock_gettime(CLOCK_REALTIME, &stop);
-
-	double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
-
-	fprintf(trace,"\nTIME %f\n",diff);
-	fflush(trace);
-	fclose(trace);
 
 	//	}
 
@@ -97,7 +97,17 @@ int main(int argc, char **argv) {
 	//	}
 	delete(fsmModel);
 	delete(fsmTest);
+	/////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////
+	clock_gettime(CLOCK_REALTIME, &stop);
 
+	double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
+
+	fprintf(trace,"TIME %f\n",(diff)); fflush(trace);
+	fprintf(stdout,"TIME %f\n",(diff)); fflush(stdout);
+	fclose(trace);
+	/////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////
 	return 0;
 
 }
