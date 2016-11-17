@@ -47,11 +47,11 @@ int main(int argc, char **argv) {
 	strftime(buffer, 26, "%Y_%m_%d_%H_%M", tm_info);
 
 
-	char 	filename[46]; // used just when debugging
-	FILE 	*trace;  // used just when debugging
-
-	sprintf(filename,"log/log_%s_rank_%02d.trace", buffer, my_rank);
-	trace = fopen(filename, "w");
+//	char 	filename[46]; // used just when debugging
+//	FILE 	*trace;  // used just when debugging
+//
+//	sprintf(filename,"log/log_%s_rank_%02d.trace", buffer, my_rank);
+//	trace = fopen(filename, "w");
 
 	int x;
 	int y;
@@ -63,10 +63,10 @@ int main(int argc, char **argv) {
 	int removeTest_r = -1;
 	int removeTest_c = -1;
 
-	fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);fflush(trace);
-	fprintf(trace, "Total of processes: %d \n", num_proc);fflush(trace);
-	fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);fflush(trace);
-	fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);fflush(trace);
+//	fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);fflush(trace);
+//	fprintf(trace, "Total of processes: %d \n", num_proc);fflush(trace);
+//	fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);fflush(trace);
+//	fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);fflush(trace);
 
 
 	int out;
@@ -79,6 +79,21 @@ int main(int argc, char **argv) {
 	SimpleFsmTestCase *tj = nullptr;
 
 	if (my_rank == 0) {
+
+		/////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////
+		char 	filename[46]; // used just when debugging
+		FILE 	*trace;  // used just when debugging
+
+		sprintf(filename,"log/logParall_%s.trace", buffer);
+		trace = fopen(filename, "w");
+
+		double begin, end;
+
+		begin = MPI_Wtime();
+		/////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////
+
 		FILE *fsmFile;
 		FILE *testFile;
 		FILE *testPrtzFile;
@@ -104,22 +119,19 @@ int main(int argc, char **argv) {
 			MPI_Abort(MPI_COMM_WORLD,1);
 		}
 
-		double begin, end;
-
-		begin = MPI_Wtime();
 
 		// row_color is filled until (var < noResets-1)
 		// (n-1) groups to broadcast test cases for each row from process 0
 		for (int var = 0; var < noResets-1; ++var) {
 			out = MPI_Comm_split(MPI_COMM_WORLD, (var+1),    0, &row_color[var]);
-			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+//			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
 		}
 
 		// column_color is filled from 1 to (var < noResets)
 		// (n-1) groups to broadcast test cases for each column from process 0
 		for (int var = 1; var < noResets; ++var) {
 			out = MPI_Comm_split(MPI_COMM_WORLD, (var+1)*10,    0, &col_color[var]);
-			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+//			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
 		}
 
 		//		prints info about all processes from row_color[var]
@@ -175,13 +187,13 @@ int main(int argc, char **argv) {
 		MPI_Comm * allTests 		= (MPI_Comm *) malloc(sizeof(MPI_Comm));
 		int color = 0;
 		out = MPI_Comm_split(MPI_COMM_WORLD, color,    my_rank,  allTests);
-		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,color,my_rank,my_rank,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+//		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,color,my_rank,my_rank,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
 
 		struct MPI_VAL_RANK *send_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		struct MPI_VAL_RANK *recv_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		send_data->rank = my_rank;
 
-		fprintf(trace,"(RANK %d) \t val_rank created \n",my_rank); fflush(trace);
+//		fprintf(trace,"(RANK %d) \t val_rank created \n",my_rank); fflush(trace);
 
 		send_data->val = -1;
 
@@ -189,9 +201,9 @@ int main(int argc, char **argv) {
 
 		for (int t_id = 0; t_id < noResets; t_id+=2) {
 			if(ts.size() == 1) break;
-			fprintf(trace,"(RANK %d) \t mpi_reduce - begin \n",my_rank); fflush(trace);
+//			fprintf(trace,"(RANK %d) \t mpi_reduce - begin \n",my_rank); fflush(trace);
 			MPI_Reduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, 0, *allTests);
-			fprintf(trace,"(RANK %d) \t mpi_reduce - end \n",my_rank); fflush(trace);
+//			fprintf(trace,"(RANK %d) \t mpi_reduce - end \n",my_rank); fflush(trace);
 			rankMax = recv_data->rank;
 			calculateXY(x_prtz,y_prtz,noResets,rankMax);
 
@@ -219,9 +231,6 @@ int main(int argc, char **argv) {
 		fsmTest->getTestCase().clear();
 		fsmTest->getTestCase().merge(t_prtz);
 
-		end = MPI_Wtime();
-
-		fprintf(trace,"\nTIME %f\n",(end-begin)); fflush(trace);
 
 		char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 		strcat(prtz,argv[2]);
@@ -237,7 +246,16 @@ int main(int argc, char **argv) {
 		delete(fsmModel);
 		delete(fsmTest);
 
+		/////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////
+		end = MPI_Wtime();
 
+		double diff = end-begin;
+		fprintf(trace,"TIME %f\n",(diff)); fflush(trace);
+		fprintf(stdout,"TIME %f\n",(diff)); fflush(stdout);
+		fclose(trace);
+		/////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////
 
 	}else{
 		int color;
@@ -252,7 +270,7 @@ int main(int argc, char **argv) {
 				color = (var+1) ;
 			}
 			out = MPI_Comm_split(MPI_COMM_WORLD, color,    my_rank, &row_color[var]);
-			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+//			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
 		}
 
 		// col_color is filled until (var < noResets-1)
@@ -265,7 +283,7 @@ int main(int argc, char **argv) {
 				color = (var+1)*10 ;
 			}
 			out = MPI_Comm_split(MPI_COMM_WORLD, color,    my_rank,  &col_color[var]);
-			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+//			fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,(var+1),0,var,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
 		}
 
 		//		MPI_Barrier(MPI_COMM_WORLD);
@@ -276,18 +294,18 @@ int main(int argc, char **argv) {
 		// receiving ti data through bcast
 		MPI_Bcast(&ti->testId,1,MPI_INT,0,row_color[x]);
 		MPI_Bcast(&ti->pTot,1,MPI_INT,0,row_color[x]);
-		fprintf(trace,"(RANK %d) \t t_%d has %d elements at p\n",my_rank,ti->testId,ti->pTot); fflush(trace);
+//		fprintf(trace,"(RANK %d) \t t_%d has %d elements at p\n",my_rank,ti->testId,ti->pTot); fflush(trace);
 		ti->p = (int*) malloc(sizeof(int)*ti->pTot);
 		MPI_Bcast(ti->p,ti->pTot,MPI_INT,0,row_color[x]);
 		//		for (int var = 0; var < ti->pTot; ++var) {
 		//			MPI_Bcast(&ti->p[var],1,MPI_INT,0,row_color[x]);
 		//		}
-		fprintf(trace,"(RANK %d) \t t_%d.p = {",my_rank,ti->testId);
-		for (int var = 0; var < ti->pTot; ++var) {
-			fprintf(trace,"\t%d",ti->p[var]);
-		}
-		fprintf(trace,"\t}\n");
-		fflush(trace);
+//		fprintf(trace,"(RANK %d) \t t_%d.p = {",my_rank,ti->testId);
+//		for (int var = 0; var < ti->pTot; ++var) {
+//			fprintf(trace,"\t%d",ti->p[var]);
+//		}
+//		fprintf(trace,"\t}\n");
+//		fflush(trace);
 
 		// allocate SimpleFsmTestCase for tj
 		tj = (SimpleFsmTestCase*) malloc(sizeof(SimpleFsmTestCase));
@@ -295,18 +313,18 @@ int main(int argc, char **argv) {
 		// receiving tj data through bcast
 		MPI_Bcast(&tj->testId,1,MPI_INT,0,col_color[y]);
 		MPI_Bcast(&tj->pTot,1,MPI_INT,0,col_color[y]);
-		fprintf(trace,"(RANK %d) \t t_%d has %d elements at p\n",my_rank,tj->testId,tj->pTot); fflush(trace);
+//		fprintf(trace,"(RANK %d) \t t_%d has %d elements at p\n",my_rank,tj->testId,tj->pTot); fflush(trace);
 		tj->p = (int*) malloc(sizeof(int)*tj->pTot);
 		MPI_Bcast(tj->p,tj->pTot,MPI_INT,0,col_color[y]);
 		//		for (int var = 0; var < tj->pTot; ++var) {
 		//			MPI_Bcast(&tj->p[var],1,MPI_INT,0,col_color[y]);
 		//		}
-		fprintf(trace,"(RANK %d) \t t_%d.p = {",my_rank,tj->testId);
-		for (int var = 0; var < tj->pTot; ++var) {
-			fprintf(trace,"\t%d",tj->p[var]);
-		}
-		fprintf(trace,"\t}\n");
-		fflush(trace);
+//		fprintf(trace,"(RANK %d) \t t_%d.p = {",my_rank,tj->testId);
+//		for (int var = 0; var < tj->pTot; ++var) {
+//			fprintf(trace,"\t%d",tj->p[var]);
+//		}
+//		fprintf(trace,"\t}\n");
+//		fflush(trace);
 
 
 
@@ -314,13 +332,13 @@ int main(int argc, char **argv) {
 		MPI_Comm * allTests 		= (MPI_Comm *) malloc(sizeof(MPI_Comm));
 		color = 0;
 		out = MPI_Comm_split(MPI_COMM_WORLD, color,    my_rank,  allTests);
-		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,color,my_rank,my_rank,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
+//		fprintf(trace,"(RANK %d) \t MPI_Comm_split(MPI_COMM_WORLD, %02d, %02d, row_color[%02d]) = %s (%d)\n",my_rank,color,my_rank,my_rank,((out == MPI_SUCCESS)?"MPI_SUCCESS":"MPI_MPI_ERR"),out);
 
 		struct MPI_VAL_RANK *send_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		struct MPI_VAL_RANK *recv_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		send_data->rank = my_rank;
 
-		fprintf(trace,"(RANK %d) \t val_rank created \n",my_rank); fflush(trace);
+//		fprintf(trace,"(RANK %d) \t val_rank created \n",my_rank); fflush(trace);
 
 		send_data->val = calcSimpleSimilarity(ti,tj);
 		//		fprintf(stderr,"-----(RANK %d) \t ds(t_%d,t_%d) = %f\n",my_rank,x,y,send_data->val);
@@ -421,9 +439,9 @@ int main(int argc, char **argv) {
 
 //	MPI_Barrier(MPI_COMM_WORLD);
 
-	fprintf(trace,"----(RANK %02d) \t THE END!!!---\n",my_rank);
-	fflush(trace);
-	fclose(trace);
+//	fprintf(trace,"----(RANK %02d) \t THE END!!!---\n",my_rank);
+//	fflush(trace);
+//	fclose(trace);
 	MPI::Finalize();
 	exit(0);
 

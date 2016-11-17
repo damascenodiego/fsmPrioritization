@@ -15,6 +15,5 @@ fi
 #echo $order
 #echo $n2
 
-mpic++ fsmPrioritization.cpp -o fsmPrioritization -lm -fopenmp -std=c++0x -I ./ ./lib/fsmLib.h ./lib/fsmLib.cpp 
-mpic++ lmdp.cpp -o lmdp -std=c++0x -I ./ ./lib/fsmLib.h ./lib/fsmLib.cpp  
-mpirun -np $np fsmPrioritization $fsm $test
+mpic++ ./fsmPrioritization.cpp -o prtzMPI -lm -fopenmp -std=c++0x -I ./ ./lib/fsmLib.h ./lib/fsmLib.cpp 
+mpirun -np $np prtzMPI $fsm $test
