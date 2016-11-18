@@ -48,7 +48,11 @@ int main(int argc, char **argv) {
 	}
 
 
+//	printTest(fsmTest);
+
 	prioritization_lmdp(fsmTest);
+
+//	printTest(fsmTest);
 
 	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));
 
@@ -62,15 +66,15 @@ int main(int argc, char **argv) {
 	strftime(buffer, 20, "%Y_%m_%d_%H_%M", tm_info);
 
 	strcat(prtz,argv[2]);
-	strcat(prtz,buffer);
+//	strcat(prtz,buffer);
 	strcat(prtz,".serial.lmdp.test");
 	testPrtzFile = fopen(prtz,"w");
 	saveTest(testPrtzFile,fsmTest);
 	fclose(testPrtzFile);
-//	strcat(prtz,".cov");
-//	FILE *testCoverageFile = fopen(prtz,"w");
-//	saveTestCoverage(testCoverageFile,fsmTest);
-//	fclose(testCoverageFile);
+		strcat(prtz,".cov");
+		FILE *testCoverageFile = fopen(prtz,"w");
+		saveTestCoverage(testCoverageFile,fsmTest);
+		fclose(testCoverageFile);
 
 
 	delete(fsmModel);
@@ -85,7 +89,7 @@ int main(int argc, char **argv) {
 	FILE 	*trace;  // used just when debugging
 
 	strcat(filename,argv[2]);
-	strcat(filename,buffer);
+//	strcat(filename,buffer);
 	strcat(filename,".trace");
 
 	trace = fopen(filename, "w");

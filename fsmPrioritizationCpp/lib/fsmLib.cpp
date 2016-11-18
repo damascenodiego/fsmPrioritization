@@ -136,7 +136,7 @@ void saveTest(FILE* f,FsmTestSuite* ts){
 		}
 		fprintf(f,"\n");
 		fflush(f);
-		it++;
+//		it++;
 	}
 }
 
@@ -172,6 +172,7 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
 	if(t0 == nullptr || t1 == nullptr) return -1;
 	std::set<int> t0Tr;
 	std::set<int> t1Tr;
+	std::set<int> diff;
 
 	int t0len = t0->getLength();
 	int t1len = t1->getLength();
@@ -179,21 +180,13 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
 	for(FsmTransition * t : t0->getP()) t0Tr.insert(t->getId());
 	for(FsmTransition * t : t1->getP()) t1Tr.insert(t->getId());
 
-	int ndt = 0;
-
-	for(int t : t0Tr) {
-		if(t1Tr.find(t) == t1Tr.end())  ndt++;
-	}
-
-	for(int t : t1Tr) {
-		if(t0Tr.find(t) == t0Tr.end())  ndt++;
-	}
+	set_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
+	double ds = diff.size() / ((t0Tr.size()+t1Tr.size())/2.0);
 
 	t0Tr.clear();
 	t1Tr.clear();
+	diff.clear();
 
-	//printf("ndt = %d\n",ndt);
-	double ds = ndt / ((t0len+t1len)/2.0);
 	return ds;
 
 }
@@ -261,7 +254,7 @@ void prioritization_lmdp(FsmTestSuite* ts){
 			for(auto ti = t.begin(); ti != endi; ti++){
 				auto tj = ti;
 				for(tj++; tj != endj; tj++){
-					tmp_ds = calcSimpleSimilarity(*ti,*tj);
+					tmp_ds = calcSimpleSimilarity((*ti),(*tj));
 					if(tmp_ds > max_ds){
 						max_ds = tmp_ds;
 						max_ti = ti;
@@ -275,7 +268,7 @@ void prioritization_lmdp(FsmTestSuite* ts){
 			tcs.push_back(*max_tj);
 			t.erase(max_ti);
 			t.erase(max_tj);
-			//			printf("\tcalcSimpleSimilarity(t[%d],t[%d]) = %f \n", (*max_ti)->getId(),(*max_tj)->getId(),max_ds);
+			printf("\tcalcSimpleSimilarity(t[%d],t[%d]) = %f \n", (*max_ti)->getId(),(*max_tj)->getId(),max_ds);
 			//			printf("t.size() = %d\n", t.size());
 			//			printf("tcs.size() = %d\n", tcs.size());
 		}else{
@@ -289,7 +282,7 @@ void prioritization_lmdp(FsmTestSuite* ts){
 	ts->getTestCase().clear();
 	ts->getTestCase().merge(tcs);
 //	for(FsmTestCase *t : tcs) {
-////		printf("\tt[%d]\n", (t)->getId());
+//		printf("\tt[%d]\n", (t)->getId());
 //		ts->getTestCase().pop_front();
 //		ts->getTestCase().push_back(t);
 //	}

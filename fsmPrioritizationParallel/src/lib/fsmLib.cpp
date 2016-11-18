@@ -136,7 +136,7 @@ void saveTest(FILE* f,FsmTestSuite* ts){
 		}
 		fprintf(f,"\n");
 		fflush(f);
-		it++;
+//		it++;
 	}
 }
 

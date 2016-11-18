@@ -156,16 +156,16 @@ int main(int argc, char **argv) {
 		strftime(buffer, 20, "%Y_%m_%d_%H_%M", tm_info);
 
 		strcat(prtz,argv[2]);
-		strcat(prtz,buffer);
+//		strcat(prtz,buffer);
 
 		strcat(prtz,".parall.lmdp.test");
 		testPrtzFile = fopen(prtz,"w");
 		saveTest(testPrtzFile,fsmTest);
 		fclose(testPrtzFile);
-		//	strcat(prtz,".cov");
-		//	FILE *testCoverageFile = fopen(prtz,"w");
-		//	saveTestCoverage(testCoverageFile,fsmTest);
-		//	fclose(testCoverageFile);
+			strcat(prtz,".cov");
+			FILE *testCoverageFile = fopen(prtz,"w");
+			saveTestCoverage(testCoverageFile,fsmTest);
+			fclose(testCoverageFile);
 
 
 		delete(fsmModel);
@@ -176,11 +176,11 @@ int main(int argc, char **argv) {
 
 		double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
 
-		char 	*filename = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+26));; // used just when debugging
+		char 	*filename = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));; // used just when debugging
 		FILE 	*trace;  // used just when debugging
 
 		strcat(filename,argv[2]);
-		strcat(filename,buffer);
+//		strcat(filename,buffer);
 		strcat(filename,".trace");
 
 		trace = fopen(filename, "w");
