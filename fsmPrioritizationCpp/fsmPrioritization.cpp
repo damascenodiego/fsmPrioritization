@@ -22,19 +22,6 @@ int main(int argc, char **argv) {
 	/////////////////////////////////////////////////////////////////////////////
 	struct timespec start,stop;
 	clock_gettime(CLOCK_REALTIME, &start);
-	char 	filename[20]; // used just when debugging
-	FILE 	*trace;  // used just when debugging
-
-	time_t timer;
-	char buffer[26];
-	struct tm* tm_info;
-
-	time(&timer);
-	tm_info = localtime(&timer);
-
-	strftime(buffer, 26, "%Y_%m_%d_%H_%M_%S", tm_info);
-	sprintf(filename,"log/logSerial_%s.trace", buffer);
-	trace = fopen(filename, "w");
 	/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +48,7 @@ int main(int argc, char **argv) {
 	}
 
 
-	//	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
+	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 	//	{
 	//		strcat(prtz,argv[2]);
 	//		strcat(prtz,".cov");
@@ -74,19 +61,19 @@ int main(int argc, char **argv) {
 	//	free(prtz);
 	//	prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 
-	//	strcat(prtz,argv[2]);
+	strcat(prtz,argv[2]);
 	//	if(argc > 3){
 	//		strcat(prtz,".gmdp.test");
 	//		prioritization_gmdp(fsmTest);
 	//	}else{
-	//		strcat(prtz,".lmdp.test");
+	strcat(prtz,".lmdp.test");
 	prioritization_lmdp(fsmTest);
 
 	//	}
 
-	//	testPrtzFile = fopen(prtz,"w");
-	//	saveTest(testPrtzFile,fsmTest);
-	//	fclose(testPrtzFile);
+	testPrtzFile = fopen(prtz,"w");
+	saveTest(testPrtzFile,fsmTest);
+	fclose(testPrtzFile);
 	//
 	//	{
 	//		strcat(prtz,".cov");
@@ -103,11 +90,30 @@ int main(int argc, char **argv) {
 
 	double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
 
-	fprintf(trace,"TIME %f\n",(diff)); fflush(trace);
-	fprintf(stdout,"TIME %f\n",(diff)); fflush(stdout);
+	time_t timer;
+	char buffer[26];
+	struct tm* tm_info;
+
+	time(&timer);
+	tm_info = localtime(&timer);
+
+	strftime(buffer, 26, "%Y_%m_%d_%H_%M", tm_info);
+
+	char 	*filename = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+26));; // used just when debugging
+	FILE 	*trace;  // used just when debugging
+
+	strcat(filename,argv[2]);
+	strcat(filename,buffer);
+	strcat(filename,".trace");
+
+	trace = fopen(filename, "w");
+
+	fprintf(trace,"Filename: %s\tSerial LMDP %lf\n",argv[2],(diff)); fflush(trace);
+	fprintf(stdout,"Filename: %s\tSerial LMDP %lf\n",argv[2],(diff)); fflush(stdout);
 	fclose(trace);
 	/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////
+
 	return 0;
 
 }
