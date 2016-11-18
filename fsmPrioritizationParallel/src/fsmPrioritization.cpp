@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 			fclose(testFile);
 
 			if( num_proc < 2) {
-				fprintf(stderr,"-np must be greater than 2\n");
+				fprintf(stderr,"-np must be greater than 2 (USED: -np %d)\n",num_proc);
 				MPI_Abort(MPI_COMM_WORLD,1);
 			}
 		}else{
@@ -145,24 +145,6 @@ int main(int argc, char **argv) {
 		MPI_Bcast(&pair2rm,1,MPI_2INT,recv_data->rank,MPI_COMM_WORLD);
 
 		char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
-		strcat(prtz,argv[2]);
-		strcat(prtz,".lmdp.test");
-		testPrtzFile = fopen(prtz,"w");
-		saveTest(testPrtzFile,fsmTest);
-		fclose(testPrtzFile);
-		////		strcat(prtz,".cov");
-		////		FILE *testCoverageFile = fopen(prtz,"w");
-		////		saveTestCoverage(testCoverageFile,fsmTest);
-		////		fclose(testCoverageFile);
-
-		delete(fsmModel);
-		delete(fsmTest);
-
-		/////////////////////////////////////////////////////////////////////////////
-		/////////////////////////////////////////////////////////////////////////////
-		clock_gettime(CLOCK_REALTIME, &stop);
-
-		double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
 
 		time_t timer;
 		char buffer[26];
@@ -172,6 +154,26 @@ int main(int argc, char **argv) {
 		tm_info = localtime(&timer);
 
 		strftime(buffer, 26, "%Y_%m_%d_%H_%M", tm_info);
+
+		strcat(prtz,argv[2]);
+		strcat(prtz,buffer);
+		strcat(prtz,".parall.lmdp.test");
+		testPrtzFile = fopen(prtz,"w");
+		saveTest(testPrtzFile,fsmTest);
+		fclose(testPrtzFile);
+	//	strcat(prtz,".cov");
+	//	FILE *testCoverageFile = fopen(prtz,"w");
+	//	saveTestCoverage(testCoverageFile,fsmTest);
+	//	fclose(testCoverageFile);
+
+
+		delete(fsmModel);
+		delete(fsmTest);
+		/////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////
+		clock_gettime(CLOCK_REALTIME, &stop);
+
+		double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
 
 		char 	*filename = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+26));; // used just when debugging
 		FILE 	*trace;  // used just when debugging

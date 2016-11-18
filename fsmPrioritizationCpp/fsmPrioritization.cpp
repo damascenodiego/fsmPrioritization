@@ -48,47 +48,9 @@ int main(int argc, char **argv) {
 	}
 
 
-	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
-	//	{
-	//		strcat(prtz,argv[2]);
-	//		strcat(prtz,".cov");
-	//		FILE *testCoverageFile = fopen(prtz,"w");
-	//		saveTestCoverage(testCoverageFile,fsmTest);
-	//		fflush(testCoverageFile);
-	//		fclose(testCoverageFile);
-	//
-	//	}
-	//	free(prtz);
-	//	prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
-
-	strcat(prtz,argv[2]);
-	//	if(argc > 3){
-	//		strcat(prtz,".gmdp.test");
-	//		prioritization_gmdp(fsmTest);
-	//	}else{
-	strcat(prtz,".lmdp.test");
 	prioritization_lmdp(fsmTest);
 
-	//	}
-
-	testPrtzFile = fopen(prtz,"w");
-	saveTest(testPrtzFile,fsmTest);
-	fclose(testPrtzFile);
-	//
-	//	{
-	//		strcat(prtz,".cov");
-	//		FILE *testCoverageFile = fopen(prtz,"w");
-	//		saveTestCoverage(testCoverageFile,fsmTest);
-	//		fclose(testCoverageFile);
-	//
-	//	}
-	delete(fsmModel);
-	delete(fsmTest);
-	/////////////////////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////////////////////
-	clock_gettime(CLOCK_REALTIME, &stop);
-
-	double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
+	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
 
 	time_t timer;
 	char buffer[26];
@@ -98,6 +60,26 @@ int main(int argc, char **argv) {
 	tm_info = localtime(&timer);
 
 	strftime(buffer, 26, "%Y_%m_%d_%H_%M", tm_info);
+
+	strcat(prtz,argv[2]);
+	strcat(prtz,buffer);
+	strcat(prtz,".serial.lmdp.test");
+	testPrtzFile = fopen(prtz,"w");
+	saveTest(testPrtzFile,fsmTest);
+	fclose(testPrtzFile);
+//	strcat(prtz,".cov");
+//	FILE *testCoverageFile = fopen(prtz,"w");
+//	saveTestCoverage(testCoverageFile,fsmTest);
+//	fclose(testCoverageFile);
+
+
+	delete(fsmModel);
+	delete(fsmTest);
+	/////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////
+	clock_gettime(CLOCK_REALTIME, &stop);
+
+	double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
 
 	char 	*filename = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+26));; // used just when debugging
 	FILE 	*trace;  // used just when debugging
