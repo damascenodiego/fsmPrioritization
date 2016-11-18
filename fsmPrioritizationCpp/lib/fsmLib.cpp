@@ -254,7 +254,7 @@ void prioritization_lmdp(FsmTestSuite* ts){
 			for(auto ti = t.begin(); ti != endi; ti++){
 				auto tj = ti;
 				for(tj++; tj != endj; tj++){
-					tmp_ds = calcSimpleSimilarity((*ti),(*tj));
+					tmp_ds = calcSimpleSimilarity((*ti)->getSimpleFormat(),(*tj)->getSimpleFormat());
 					if(tmp_ds > max_ds){
 						max_ds = tmp_ds;
 						max_ti = ti;
@@ -268,7 +268,7 @@ void prioritization_lmdp(FsmTestSuite* ts){
 			tcs.push_back(*max_tj);
 			t.erase(max_ti);
 			t.erase(max_tj);
-			printf("\tcalcSimpleSimilarity(t[%d],t[%d]) = %f \n", (*max_ti)->getId(),(*max_tj)->getId(),max_ds);
+//			printf("\tcalcSimpleSimilarity(t[%d],t[%d]) = %f \n", (*max_ti)->getId(),(*max_tj)->getId(),max_ds);
 			//			printf("t.size() = %d\n", t.size());
 			//			printf("tcs.size() = %d\n", tcs.size());
 		}else{
