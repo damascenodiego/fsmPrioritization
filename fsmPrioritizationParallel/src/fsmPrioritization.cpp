@@ -144,27 +144,28 @@ int main(int argc, char **argv) {
 		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 		MPI_Bcast(&pair2rm,1,MPI_2INT,recv_data->rank,MPI_COMM_WORLD);
 
-		char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
+		char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));
 
 		time_t timer;
-		char buffer[26];
+		char buffer[20];
 		struct tm* tm_info;
 
 		time(&timer);
 		tm_info = localtime(&timer);
 
-		strftime(buffer, 26, "%Y_%m_%d_%H_%M", tm_info);
+		strftime(buffer, 20, "%Y_%m_%d_%H_%M", tm_info);
 
 		strcat(prtz,argv[2]);
 		strcat(prtz,buffer);
+
 		strcat(prtz,".parall.lmdp.test");
 		testPrtzFile = fopen(prtz,"w");
 		saveTest(testPrtzFile,fsmTest);
 		fclose(testPrtzFile);
-	//	strcat(prtz,".cov");
-	//	FILE *testCoverageFile = fopen(prtz,"w");
-	//	saveTestCoverage(testCoverageFile,fsmTest);
-	//	fclose(testCoverageFile);
+		//	strcat(prtz,".cov");
+		//	FILE *testCoverageFile = fopen(prtz,"w");
+		//	saveTestCoverage(testCoverageFile,fsmTest);
+		//	fclose(testCoverageFile);
 
 
 		delete(fsmModel);
@@ -259,7 +260,7 @@ int main(int argc, char **argv) {
 			pair2rm[0] = rit->second.first;
 			pair2rm[1] = rit->second.second;
 
-//			fprintf(trace,"(RANK %d) \t My highest ds(%d,%d)=%f\n",my_rank,pair2rm[0],pair2rm[1],rit->first); fflush(trace);
+			//			fprintf(trace,"(RANK %d) \t My highest ds(%d,%d)=%f\n",my_rank,pair2rm[0],pair2rm[1],rit->first); fflush(trace);
 			MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 			MPI_Bcast(&pair2rm,1,MPI_2INT,recv_data->rank,MPI_COMM_WORLD);
 
@@ -291,7 +292,7 @@ int main(int argc, char **argv) {
 		fprintf(trace,"(RANK %d) \t Total of SimpleSimilarity values = %zu\n",my_rank,simPair.size()); fflush(trace);
 	}
 
-//	MPI_Barrier(MPI_COMM_WORLD);
+	//	MPI_Barrier(MPI_COMM_WORLD);
 
 	fprintf(trace,"----(RANK %02d) \t THE END!!!---\n",my_rank);
 	fflush(trace);

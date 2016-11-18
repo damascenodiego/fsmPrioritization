@@ -50,16 +50,16 @@ int main(int argc, char **argv) {
 
 	prioritization_lmdp(fsmTest);
 
-	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+14));
+	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));
 
 	time_t timer;
-	char buffer[26];
+	char buffer[20];
 	struct tm* tm_info;
 
 	time(&timer);
 	tm_info = localtime(&timer);
 
-	strftime(buffer, 26, "%Y_%m_%d_%H_%M", tm_info);
+	strftime(buffer, 20, "%Y_%m_%d_%H_%M", tm_info);
 
 	strcat(prtz,argv[2]);
 	strcat(prtz,buffer);
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 
 	double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
 
-	char 	*filename = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+26));; // used just when debugging
+	char 	*filename = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));; // used just when debugging
 	FILE 	*trace;  // used just when debugging
 
 	strcat(filename,argv[2]);
