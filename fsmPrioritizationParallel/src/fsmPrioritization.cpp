@@ -31,16 +31,16 @@ int main(int argc, char **argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
 
-//	char 	filename[46]; // used just when debugging
-//	FILE 	*trace;  // used just when debugging
+	//		char 	filename[46]; // used just when debugging
+	//		FILE 	*trace;  // used just when debugging
 	//
-//	sprintf(filename,"log/rank_%02d.trace", my_rank);
-//	trace = fopen(filename, "w");
+	//		sprintf(filename,"log/rank_%02d.trace", my_rank);
+	//		trace = fopen(filename, "w");
 
-//	fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);fflush(trace);
-//	fprintf(trace, "Total of processes: %d \n", num_proc);fflush(trace);
-	//	fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);fflush(trace);
-	//	fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);fflush(trace);
+	//		fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);fflush(trace);
+	//		fprintf(trace, "Total of processes: %d \n", num_proc);fflush(trace);
+	//		fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);fflush(trace);
+	//		fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);fflush(trace);
 
 	int out;
 	int id_p[2];
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 		send_data->val = -1;
 
 		std::list<FsmTestCase*> t_prtz;
-//		fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
+		//				fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
 
 		int pair2rm[2];
 		for (int t_id = 0; t_id < noResets; t_id+=2)
@@ -122,19 +122,21 @@ int main(int argc, char **argv) {
 
 			int x_prtz = pair2rm[0];
 			int y_prtz = pair2rm[1];
-//			fprintf(trace,"(RANK %d) \t highest ds(%d,%d)=%f received from %d\n",my_rank,x_prtz,y_prtz,recv_data->val,recv_data->rank); fflush(trace);
+			//						fprintf(trace,"(RANK %d) \t highest ds(%d,%d)=%f received from %d\n",my_rank,x_prtz,y_prtz,recv_data->val,recv_data->rank); fflush(trace);
 
-			t_prtz.push_back(ts[x_prtz]);
-			t_prtz.push_back(ts[y_prtz]);
-			ts.erase(x_prtz);
-			ts.erase(y_prtz);
-//			fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
+			if(ts.find(x_prtz)!=ts.end() && ts.find(y_prtz)!=ts.end()){
+				t_prtz.push_back(ts[x_prtz]);
+				t_prtz.push_back(ts[y_prtz]);
+				ts.erase(x_prtz);
+				ts.erase(y_prtz);
+			}
+			//						fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
 		}
 		if(ts.size() == 1){
 			t_prtz.push_back(ts.begin()->second);
 			ts.clear();
 		}
-//		fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
+		//				fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
 		fsmTest->getTestCase().clear();
 		fsmTest->getTestCase().merge(t_prtz);
 
@@ -143,7 +145,6 @@ int main(int argc, char **argv) {
 		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 		MPI_Bcast(&pair2rm,1,MPI_2INT,recv_data->rank,MPI_COMM_WORLD);
 
-		char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));
 
 		time_t timer;
 		char buffer[20];
@@ -154,13 +155,15 @@ int main(int argc, char **argv) {
 
 		strftime(buffer, 20, "%Y_%m_%d_%H_%M_%S", tm_info);
 
+		char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));
+		prtz[0]='\0';
 		strcat(prtz,argv[2]);
-		strcat(prtz,".");
-		strcat(prtz,buffer);
+		//		strcat(prtz,".");
+		//		strcat(prtz,buffer);
 		strcat(prtz,".parall.lmdp.test");
-
 		testPrtzFile = fopen(prtz,"w");
-		saveTest(testPrtzFile,fsmTest);
+		if(testPrtzFile!=NULL)saveTest(testPrtzFile,fsmTest);
+		fflush(testPrtzFile);
 		fclose(testPrtzFile);
 		//		strcat(prtz,".cov");
 		//		FILE *testCoverageFile = fopen(prtz,"w");
@@ -180,13 +183,13 @@ int main(int argc, char **argv) {
 		FILE 	*trace;  // used just when debugging
 
 		strcat(filename,argv[2]);
-		strcat(filename,".");
-		strcat(filename,buffer);
+		//		strcat(filename,".");
+		//		strcat(filename,buffer);
 		strcat(filename,".parall.trace");
-		trace = fopen(filename, "w");
+		trace = fopen(filename, "a");
 
-		fprintf(trace,"Filename: %s\tParall LMDP %lf\n",argv[2],(diff)); fflush(trace);
-//		fprintf(stdout,"Filename: %s\tParall LMDP %lf\n",argv[2],(diff)); fflush(stdout);
+		fprintf(trace,"%s\t%s\t%s\t%lf\t%d\n",buffer,argv[2],prtz,(diff),num_proc); fflush(trace);
+		fprintf(stdout,"%s\t%s\t%s\t%lf\t%d\n",buffer,argv[2],prtz,(diff),num_proc); fflush(stdout);
 		fclose(trace);
 		/////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////
@@ -221,19 +224,19 @@ int main(int argc, char **argv) {
 		keyPos_f *= (my_rank);
 
 		int inc=0;
-//		fprintf(trace,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d)\n",my_rank,keyPos_i,keyPos_f);
+		//		fprintf(trace,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d)\n",my_rank,keyPos_i,keyPos_f);
 		for (int i = 0; i < noResets-1; ++i) {
 			if((inc+noResets-i-1) < keyPos_i){
 				inc+=noResets-i-1; continue;
 			}
 			if(keyPos_f < inc) break;
-//			fprintf(trace,"(RANK %d) \t Iteration from %d - %d\n",my_rank,inc,((inc+noResets-i-1)));
+			//			fprintf(trace,"(RANK %d) \t Iteration from %d - %d\n",my_rank,inc,((inc+noResets-i-1)));
 			for (int j = i+1; j < noResets; ++j) {
 				if(keyPos_i <= inc && inc < keyPos_f){
 					double ds = calcSimpleSimilarity(ts[i],ts[j]);
 					std::pair<int,int> p(i,j);
 					simPair.insert(std::pair<double,std::pair<int,int>>(ds,p));
-//					fprintf(trace,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
+					//					fprintf(trace,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
 				}
 				inc++;
 			}
@@ -241,7 +244,7 @@ int main(int argc, char **argv) {
 		struct MPI_VAL_RANK *send_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		struct MPI_VAL_RANK *recv_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 
-//		fprintf(trace,"(RANK %d) \t Total of SimpleSimilarity values = %zu\n",my_rank,simPair.size()); fflush(trace);
+		//		fprintf(trace,"(RANK %d) \t Total of SimpleSimilarity values = %zu\n",my_rank,simPair.size()); fflush(trace);
 
 		int pair2rm[2];
 		while(!simPair.empty()) {
@@ -266,7 +269,7 @@ int main(int argc, char **argv) {
 
 			if(pair2rm[0] < 0 && pair2rm[1] < 0) break;
 
-//			fprintf(trace,"(RANK %d) \t The highest ds(%d,%d)=%f was received from %d\n",my_rank,pair2rm[0],pair2rm[1],recv_data->val,recv_data->rank); fflush(trace);
+			//			fprintf(trace,"(RANK %d) \t The highest ds(%d,%d)=%f was received from %d\n",my_rank,pair2rm[0],pair2rm[1],recv_data->val,recv_data->rank); fflush(trace);
 
 			std::multimap<double,std::pair<int,int>>::iterator it = simPair.begin();
 			while (it != simPair.end()) {
@@ -289,14 +292,14 @@ int main(int argc, char **argv) {
 			MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 			MPI_Bcast(&pair2rm,1,MPI_2INT,recv_data->rank,MPI_COMM_WORLD);
 		}
-//		fprintf(trace,"(RANK %d) \t Total of SimpleSimilarity values = %zu\n",my_rank,simPair.size()); fflush(trace);
+		//		fprintf(trace,"(RANK %d) \t Total of SimpleSimilarity values = %zu\n",my_rank,simPair.size()); fflush(trace);
 	}
 
 	//	MPI_Barrier(MPI_COMM_WORLD);
 
-//	fprintf(trace,"----(RANK %02d) \t THE END!!!---\n",my_rank);
-//	fflush(trace);
-//	fclose(trace);
+	//	fprintf(trace,"----(RANK %02d) \t THE END!!!---\n",my_rank);
+	//	fflush(trace);
+	//	fclose(trace);
 	MPI::Finalize();
 	exit(0);
 

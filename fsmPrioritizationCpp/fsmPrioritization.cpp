@@ -54,8 +54,6 @@ int main(int argc, char **argv) {
 
 	//	printTest(fsmTest);
 
-	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));
-
 	time_t timer;
 	char buffer[20];
 	struct tm* tm_info;
@@ -65,17 +63,19 @@ int main(int argc, char **argv) {
 
 	strftime(buffer, 20, "%Y_%m_%d_%H_%M_%S", tm_info);
 
+	char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));
 	strcat(prtz,argv[2]);
-	strcat(prtz,".");
-	strcat(prtz,buffer);
+	//		strcat(prtz,".");
+	//		strcat(prtz,buffer);
 	strcat(prtz,".serial.lmdp.test");
-	testPrtzFile = fopen(prtz,"w");
-	saveTest(testPrtzFile,fsmTest);
-	fclose(testPrtzFile);
-	//	strcat(prtz,".cov");
-	//	FILE *testCoverageFile = fopen(prtz,"w");
-	//	saveTestCoverage(testCoverageFile,fsmTest);
-	//	fclose(testCoverageFile);
+		testPrtzFile = fopen(prtz,"w");
+		saveTest(testPrtzFile,fsmTest);
+		fflush(testPrtzFile);
+		fclose(testPrtzFile);
+	//		strcat(prtz,".cov");
+	//		FILE *testCoverageFile = fopen(prtz,"w");
+	//		saveTestCoverage(testCoverageFile,fsmTest);
+	//		fclose(testCoverageFile);
 
 
 	delete(fsmModel);
@@ -90,14 +90,13 @@ int main(int argc, char **argv) {
 	FILE 	*trace;  // used just when debugging
 
 	strcat(filename,argv[2]);
-	strcat(filename,".");
-	strcat(filename,buffer);
+	//		strcat(filename,".");
+	//		strcat(filename,buffer);
 	strcat(filename,".serial.trace");
+	trace = fopen(filename, "a");
 
-	trace = fopen(filename, "w");
-
-	fprintf(trace,"Filename: %s\tSerial LMDP %lf\n",argv[2],(diff)); fflush(trace);
-//	fprintf(stdout,"Filename: %s\tSerial LMDP %lf\n",argv[2],(diff)); fflush(stdout);
+	fprintf(trace,"%s\t%s\t%s\t%lf\t%d\n",buffer,argv[2],prtz,(diff),1); fflush(trace);
+	fprintf(stdout,"%s\t%s\t%s\t%lf\t%d\n",buffer,argv[2],prtz,(diff),1); fflush(stdout);
 	fclose(trace);
 	/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////
