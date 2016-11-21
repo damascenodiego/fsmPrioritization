@@ -188,7 +188,7 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
 	t1Tr.clear();
 	diff.clear();
 
-//	printf("ds(%d,%d) = %f\n",t0->getId(),t1->getId(),ds);
+	printf("ds(%d,%d) = %f\n",t0->getId(),t1->getId(),ds);
 
 	return ds;
 
@@ -230,7 +230,7 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 	t1Tr.clear();
 	diff.clear();
 
-//	printf("ds(%d,%d) = %f\n",t0->testId,t1->testId,ds);
+	printf("ds(%d,%d) = %f\n",t0->testId,t1->testId,ds);
 	return ds;
 
 }
@@ -393,31 +393,34 @@ void update_ds_sum(double *gmdp_arr, int max_t,int noResets, int my_rank, int nu
 int getMaxDs(double * gmdp_arr,int noResets){
 	int max_ds = noResets-1;
 	int loc_max,cnt,var;
-//	fprintf(stdout,"omp_get_max_threads() = %d\n",omp_get_max_threads());
+	fprintf(stdout,"omp_get_max_threads() = %d\n",omp_get_max_threads());
 	int omp_nothreads = (omp_get_max_threads() > noResets) ? noResets : omp_get_max_threads();
-//	fprintf(stdout,"omp_nothreads = %d\n",omp_nothreads);
+	fprintf(stdout,"omp_nothreads = %d\n",omp_nothreads);
 	double omp_resets = noResets/(double)omp_nothreads;
-//	fprintf(stdout,"omp_resets = %f (noResets = %d)\n",omp_resets,noResets);
+	fprintf(stdout,"omp_resets = %f (noResets = %d)\n",omp_resets,noResets);
 	#pragma omp parallel shared(max_ds) num_threads(omp_nothreads) private(loc_max,cnt,var)
 	{
 		cnt = omp_get_thread_num();
-//		fprintf(stdout,"(OMP RANK %d) starts @ %f and ends @ %f\n",cnt,cnt*omp_resets,((cnt+1)*omp_resets));
+		fprintf(stdout,"(OMP RANK %d) starts @ %f and ends @ %f\n",cnt,floor(cnt*omp_resets),trunc(((cnt+1)*omp_resets)));
 		loc_max = max_ds;
-		for(var = cnt*omp_resets; var < ((cnt+1)*omp_resets); var++){
+		for(var = floor(cnt*omp_resets); var < trunc(((cnt+1)*omp_resets)); var++){
 			if(gmdp_arr[loc_max] < gmdp_arr[var]){
 				loc_max = var;
-//				fprintf(stdout,"(OMP RANK %d) loc_max = %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
+				fprintf(stdout,"(OMP RANK %d) loc_max = %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
 			}
 		}
 		#pragma omp critical
 		{
-			if(gmdp_arr[loc_max] >= gmdp_arr[max_ds] && loc_max < max_ds) {
+			if(gmdp_arr[loc_max] > gmdp_arr[max_ds]) {
 				max_ds = loc_max;
-//				fprintf(stdout,"(OMP RANK %d) max_ds updated to %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
+				fprintf(stdout,"(OMP RANK %d) max_ds updated to %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
+			}else if(gmdp_arr[loc_max] == gmdp_arr[max_ds] && loc_max < max_ds) {
+				max_ds = loc_max;
+				fprintf(stdout,"(OMP RANK %d) max_ds updated to %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
 			}
 		}
 	}
-//	fprintf(stdout,"############# max_ds is %d (%f)\n",max_ds,gmdp_arr[max_ds]);
+	fprintf(stdout,"############# max_ds is %d (%f)\n",max_ds,gmdp_arr[max_ds]);
 	return max_ds;
 }
 int toTriangMatrix(int xpos,int ypos,int noReset){
