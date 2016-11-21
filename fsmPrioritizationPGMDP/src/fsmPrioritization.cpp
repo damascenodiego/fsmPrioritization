@@ -31,14 +31,14 @@ int main(int argc, char **argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
 
-		char 	filename[46]; // used just when debugging
-		FILE 	*trace;  // used just when debugging
-
-		sprintf(filename,"log/rank_%02d.trace", my_rank);
-		trace = fopen(filename, "w");
-
-		fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);fflush(trace);
-		fprintf(trace, "Total of processes: %d \n", num_proc);fflush(trace);
+	//		char 	filename[46]; // used just when debugging
+	//		FILE 	*trace;  // used just when debugging
+	//
+	//		sprintf(filename,"log/rank_%02d.trace", my_rank);
+	//		trace = fopen(filename, "w");
+	//
+	//		fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);fflush(trace);
+	//		fprintf(trace, "Total of processes: %d \n", num_proc);fflush(trace);
 	//		fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);fflush(trace);
 	//		fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);fflush(trace);
 
@@ -140,12 +140,12 @@ int main(int argc, char **argv) {
 		////////////////////////
 		max_t = pair2rm[0];
 		update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
-		fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,recv_data->val); fflush(trace);
-		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
-		for (int var = 0; var < noResets; ++var) {
-			fprintf(trace,"%f\t",gmdp_arr[var]);
-		}
-		fprintf(trace,"\n"); fflush(trace);
+//		fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,recv_data->val); fflush(trace);
+//		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
+//		for (int var = 0; var < noResets; ++var) {
+//			fprintf(trace,"%f\t",gmdp_arr[var]);
+//		}
+//		fprintf(trace,"\n"); fflush(trace);
 
 		//		gmdp_arr[5] = -99;
 		////////////////////////
@@ -153,31 +153,31 @@ int main(int argc, char **argv) {
 		////////////////////////
 		max_t = pair2rm[1];
 		update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
-		fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,recv_data->val); fflush(trace);
-		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
-		for (int var = 0; var < noResets; ++var) {
-			fprintf(trace,"%f\t",gmdp_arr[var]);
-		}
-		fprintf(trace,"\n"); fflush(trace);
+//		fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,recv_data->val); fflush(trace);
+//		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
+//		for (int var = 0; var < noResets; ++var) {
+//			fprintf(trace,"%f\t",gmdp_arr[var]);
+//		}
+//		fprintf(trace,"\n"); fflush(trace);
 
 		while(!ts.empty()) {
 			//			fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
 			max_t = getMaxDs(gmdp_arr,noResets);
-			fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,gmdp_arr[max_t]); fflush(trace);
-			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
-			for (int var = 0; var < noResets; ++var) {
-				fprintf(trace,"%f\t",gmdp_arr[var]);
-			}
-			fprintf(trace,"\n"); fflush(trace);
+//			fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,gmdp_arr[max_t]); fflush(trace);
+//			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
+//			for (int var = 0; var < noResets; ++var) {
+//				fprintf(trace,"%f\t",gmdp_arr[var]);
+//			}
+//			fprintf(trace,"\n"); fflush(trace);
 			pair2rm[0] = pair2rm[1] = max_t;
 			MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
 
 			update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
-			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
-			for (int var = 0; var < noResets; ++var) {
-				fprintf(trace,"%f\t",gmdp_arr[var]);
-			}
-			fprintf(trace,"\n"); fflush(trace);
+//			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
+//			for (int var = 0; var < noResets; ++var) {
+//				fprintf(trace,"%f\t",gmdp_arr[var]);
+//			}
+//			fprintf(trace,"\n"); fflush(trace);
 
 			if(ts.find(max_t)!=ts.end()){
 				t_prtz.push_back(ts[max_t]);

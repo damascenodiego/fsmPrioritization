@@ -323,11 +323,11 @@ void prioritization_gmdp(FsmTestSuite* ts){
 	//	(*max_ti)->print(); (*max_tj)->print();
 
 	double *ds_sum = (double *)calloc(ts->getNoResets(),sizeof(double));
-	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+//	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
 	update_ds_sum(t,*max_ti,ds_sum);
-	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+//	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
 	update_ds_sum(t,*max_tj,ds_sum);
-	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+//	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
 
 	t.erase(max_ti);
 	t.erase(max_tj);
@@ -342,7 +342,7 @@ void prioritization_gmdp(FsmTestSuite* ts){
 		}
 		tcs.push_back(*max_ti);
 		update_ds_sum(t,*max_ti,ds_sum);
-		for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+//		for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
 		t.erase(max_ti);
 	}
 	for(FsmTestCase *t : tcs) {
