@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 		struct MPI_VAL_RANK *recv_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		send_data->rank = my_rank;
 		send_data->val = -1;
-						fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
+//						fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
 		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 
 		///////////////////////////////////
@@ -182,11 +182,11 @@ int main(int argc, char **argv) {
 			if(ts.find(max_t)!=ts.end()){
 				t_prtz.push_back(ts[max_t]);
 				ts.erase(max_t);
-								fprintf(trace,"(RANK %d) \t Test cases %d removed\n",my_rank,max_t); fflush(trace);
+//								fprintf(trace,"(RANK %d) \t Test cases %d removed\n",my_rank,max_t); fflush(trace);
 			}
 
 		}
-				fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
+//				fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
 		fsmTest->getTestCase().clear();
 		fsmTest->getTestCase().merge(t_prtz);
 
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
 		strcat(prtz,argv[2]);
 		//		strcat(prtz,".");
 		//		strcat(prtz,buffer);
-		strcat(prtz,".parall.gmdp.test");
+		strcat(prtz,".pgmdp.test");
 		testPrtzFile = fopen(prtz,"w");
 		if(testPrtzFile!=NULL)saveTest(testPrtzFile,fsmTest);
 		fflush(testPrtzFile);
@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
 		strcat(filename,argv[2]);
 		//		strcat(filename,".");
 		//		strcat(filename,buffer);
-		strcat(filename,".parall.trace");
+		strcat(filename,".pgmdp.trace");
 		trace = fopen(filename, "a");
 
 		fprintf(trace,"%s\t%s\t%s\t%lf\t%d\n",buffer,argv[2],prtz,(diff),num_proc); fflush(trace);
@@ -305,12 +305,12 @@ int main(int argc, char **argv) {
 
 		//		fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,pairSim.size()); fflush(trace);
 
-		for(auto _ti: pairSim){
-			std::map<int,double>* m = _ti.second;
-			for(auto _tj: (*m)){
-								fprintf(trace,"t[%d][%d]=%f\n",_ti.first,_tj.first,_tj.second);
-			}
-		}
+//		for(auto _ti: pairSim){
+//			std::map<int,double>* m = _ti.second;
+//			for(auto _tj: (*m)){
+//								fprintf(trace,"t[%d][%d]=%f\n",_ti.first,_tj.first,_tj.second);
+//			}
+//		}
 
 		//		fflush(trace);
 
@@ -336,7 +336,7 @@ int main(int argc, char **argv) {
 		}else{
 			totDs = 0;
 		}
-				fprintf(trace,"(RANK %d) \t Number of ds to test %d = %d\n",my_rank,pair2rm[0],totDs); fflush(trace);
+//				fprintf(trace,"(RANK %d) \t Number of ds to test %d = %d\n",my_rank,pair2rm[0],totDs); fflush(trace);
 		MPI_Gather(&totDs,1,MPI_INT,&totDs,1,MPI_INT,0,MPI_COMM_WORLD);
 
 		int count;

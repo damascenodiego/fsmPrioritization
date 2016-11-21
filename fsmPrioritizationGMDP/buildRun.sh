@@ -15,5 +15,5 @@ fi
 #echo $order
 #echo $n2
 
-g++ fsmPrioritization.cpp -o prtzSerial -lm -std=c++0x -I ./ ./lib/fsmLib.h ./lib/fsmLib.cpp 
-./prtzSerial $fsm $test
+g++ fsmPrioritization.cpp -o gmdp -lm -std=c++0x -I ./ ./lib/fsmLib.h ./lib/fsmLib.cpp 
+./gmdp $fsm $test

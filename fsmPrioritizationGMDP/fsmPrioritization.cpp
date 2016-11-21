@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	strcat(prtz,argv[2]);
 	//		strcat(prtz,".");
 	//		strcat(prtz,buffer);
-	strcat(prtz,".serial.lmdp.test");
+	strcat(prtz,".gmdp.test");
 		testPrtzFile = fopen(prtz,"w");
 		saveTest(testPrtzFile,fsmTest);
 		fflush(testPrtzFile);
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 	strcat(filename,argv[2]);
 	//		strcat(filename,".");
 	//		strcat(filename,buffer);
-	strcat(filename,".serial.trace");
+	strcat(filename,".gmdp.trace");
 	trace = fopen(filename, "a");
 
 	fprintf(trace,"%s\t%s\t%s\t%lf\t%d\n",buffer,argv[2],prtz,(diff),1); fflush(trace);

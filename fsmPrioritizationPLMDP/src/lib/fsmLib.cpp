@@ -187,7 +187,7 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
 	t1Tr.clear();
 	diff.clear();
 
-	printf("ds(%d,%d) = %f\n",t0->getId(),t1->getId(),ds);
+//	printf("ds(%d,%d) = %f\n",t0->getId(),t1->getId(),ds);
 
 	return ds;
 
@@ -229,7 +229,7 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 	t1Tr.clear();
 	diff.clear();
 
-	printf("ds(%d,%d) = %f\n",t0->testId,t1->testId,ds);
+//	printf("ds(%d,%d) = %f\n",t0->testId,t1->testId,ds);
 	return ds;
 
 }

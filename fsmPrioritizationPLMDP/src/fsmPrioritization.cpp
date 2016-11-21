@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 		strcat(prtz,argv[2]);
 		//		strcat(prtz,".");
 		//		strcat(prtz,buffer);
-		strcat(prtz,".parall.lmdp.test");
+		strcat(prtz,".plmdp.test");
 		testPrtzFile = fopen(prtz,"w");
 		if(testPrtzFile!=NULL)saveTest(testPrtzFile,fsmTest);
 		fflush(testPrtzFile);
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
 		strcat(filename,argv[2]);
 		//		strcat(filename,".");
 		//		strcat(filename,buffer);
-		strcat(filename,".parall.trace");
+		strcat(filename,".plmdp.trace");
 		trace = fopen(filename, "a");
 
 		fprintf(trace,"%s\t%s\t%s\t%lf\t%d\n",buffer,argv[2],prtz,(diff),num_proc); fflush(trace);
