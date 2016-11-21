@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
 	//	printTest(fsmTest);
 
-	prioritization_lmdp(fsmTest);
+	prioritization_gmdp(fsmTest);
 
 	//	printTest(fsmTest);
 

@@ -180,12 +180,14 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
 	for(FsmTransition * t : t0->getP()) t0Tr.insert(t->getId());
 	for(FsmTransition * t : t1->getP()) t1Tr.insert(t->getId());
 
-	set_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
+	set_symmetric_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
 	double ds = diff.size() / ((t0Tr.size()+t1Tr.size())/2.0);
 
 	t0Tr.clear();
 	t1Tr.clear();
 	diff.clear();
+
+	printf("ds(%d,%d) = %f\n",t0->getId(),t1->getId(),ds);
 
 	return ds;
 
@@ -220,13 +222,14 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 	//printf("ndt = %d\n",ndt);
 	//double ds = ndt / ((t0len+t1len)/2.0);
 
-	set_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
+	set_symmetric_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
 	double ds = diff.size() / ((t0Tr.size()+t1Tr.size())/2.0);
 
 	t0Tr.clear();
 	t1Tr.clear();
 	diff.clear();
 
+	printf("ds(%d,%d) = %f\n",t0->testId,t1->testId,ds);
 	return ds;
 
 }
@@ -254,7 +257,7 @@ void prioritization_lmdp(FsmTestSuite* ts){
 			for(auto ti = t.begin(); ti != endi; ti++){
 				auto tj = ti;
 				for(tj++; tj != endj; tj++){
-					tmp_ds = calcSimpleSimilarity((*ti)->getSimpleFormat(),(*tj)->getSimpleFormat());
+					tmp_ds = calcSimpleSimilarity(*ti,*tj);
 					if(tmp_ds > max_ds){
 						max_ds = tmp_ds;
 						max_ti = ti;
@@ -268,7 +271,7 @@ void prioritization_lmdp(FsmTestSuite* ts){
 			tcs.push_back(*max_tj);
 			t.erase(max_ti);
 			t.erase(max_tj);
-//			printf("\tcalcSimpleSimilarity(t[%d],t[%d]) = %f \n", (*max_ti)->getId(),(*max_tj)->getId(),max_ds);
+			//			printf("\tcalcSimpleSimilarity(t[%d],t[%d]) = %f \n", (*max_ti)->getId(),(*max_tj)->getId(),max_ds);
 			//			printf("t.size() = %d\n", t.size());
 			//			printf("tcs.size() = %d\n", tcs.size());
 		}else{
@@ -281,11 +284,11 @@ void prioritization_lmdp(FsmTestSuite* ts){
 	}
 	ts->getTestCase().clear();
 	ts->getTestCase().merge(tcs);
-//	for(FsmTestCase *t : tcs) {
-//		printf("\tt[%d]\n", (t)->getId());
-//		ts->getTestCase().pop_front();
-//		ts->getTestCase().push_back(t);
-//	}
+	//	for(FsmTestCase *t : tcs) {
+	////		printf("\tt[%d]\n", (t)->getId());
+	//		ts->getTestCase().pop_front();
+	//		ts->getTestCase().push_back(t);
+	//	}
 }
 
 void prioritization_gmdp(FsmTestSuite* ts){
@@ -354,4 +357,74 @@ void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum){
 	for(FsmTestCase * t : ts){
 		if(ds_sum[t->getId()] >= 0.0)ds_sum[t->getId()] += calcSimpleSimilarity(t,tc);
 	}
+}
+
+int toTriangMatrix(int xpos,int ypos,int noReset){
+	//	fprintf(stderr,"(%d,%d)\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos);
+	int tmPos = 0;
+	int i = (xpos<ypos)? xpos : ypos;
+	int j = ((xpos>ypos)? xpos : ypos)-i;
+	int lTot = noReset-1;
+	//	fprintf(stderr,"(%d,%d) = %d\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos,tmPos);
+
+	while(i > 0){
+		tmPos+= lTot;
+		//		fprintf(stderr,"(%d,%d) = %d\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos,tmPos);
+		lTot--;
+		i--;
+	}
+	tmPos+= j;
+	return tmPos;
+}
+
+// code below was taken from
+// http://stackoverflow.com/questions/14690481/how-to-know-the-all-the-ranks-of-the-processor-that-are-part-of-a-communicator-i
+void print_comm_ranks(MPI_Comm comm, FILE*f) {
+	MPI_Group grp, world_grp;
+
+	int my_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+
+	MPI_Comm_group(MPI_COMM_WORLD, &world_grp);
+	MPI_Comm_group(comm, &grp);
+
+	int grp_size;
+
+	MPI_Group_size(grp, &grp_size);
+
+	int *ranks = (int*)malloc(grp_size * sizeof(int));
+	int *world_ranks = (int*)malloc(grp_size * sizeof(int));
+
+	for (int i = 0; i < grp_size; i++)
+		ranks[i] = i;
+
+	MPI_Group_translate_ranks(grp, grp_size, ranks, world_grp, world_ranks);
+
+	for (int i = 0; i < grp_size; i++){
+		if(f == nullptr){
+			fprintf(stderr,"(RANK %d) \t comm[%d] has world rank %d\n", my_rank,i, world_ranks[i]);
+		}else{
+			fprintf(f,"(RANK %d) \t comm[%d] has world rank %d\n", my_rank, i, world_ranks[i]);
+		}
+	}
+
+
+	free(ranks); free(world_ranks);
+
+	MPI_Group_free(&grp);
+	MPI_Group_free(&world_grp);
+}
+
+void calculateXY(int &x,int &y, int noResets, int my_rank){
+	int tmp = noResets;
+	x = 0;
+	y = my_rank;
+	tmp--;
+	while ((y) > tmp ){
+		(x)++;
+		(y) -= tmp;
+		tmp--;
+	}
+	(y)  += (x) ;
 }

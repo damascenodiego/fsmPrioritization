@@ -11,6 +11,7 @@
 #include <set>
 #include <algorithm>
 #include "fsmLib.h"
+#include <omp.h>
 
 FsmModel * loadFsm(FILE* f){
 	FsmModel *fsm = new FsmModel();
@@ -135,8 +136,8 @@ void saveTest(FILE* f,FsmTestSuite* ts){
 			fprintf(f,"%03d",i);
 		}
 		fprintf(f,"\n");
-//		fflush(f);
-//		it++;
+		//		fflush(f);
+		//		it++;
 	}
 }
 
@@ -172,6 +173,7 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
 	if(t0 == nullptr || t1 == nullptr) return -1;
 	std::set<int> t0Tr;
 	std::set<int> t1Tr;
+	std::set<int> diff;
 
 	int t0len = t0->getLength();
 	int t1len = t1->getLength();
@@ -179,21 +181,15 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1){
 	for(FsmTransition * t : t0->getP()) t0Tr.insert(t->getId());
 	for(FsmTransition * t : t1->getP()) t1Tr.insert(t->getId());
 
-	int ndt = 0;
-
-	for(int t : t0Tr) {
-		if(t1Tr.find(t) == t1Tr.end())  ndt++;
-	}
-
-	for(int t : t1Tr) {
-		if(t0Tr.find(t) == t0Tr.end())  ndt++;
-	}
+	set_symmetric_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
+	double ds = diff.size() / ((t0Tr.size()+t1Tr.size())/2.0);
 
 	t0Tr.clear();
 	t1Tr.clear();
+	diff.clear();
 
-	//printf("ndt = %d\n",ndt);
-	double ds = ndt / ((t0len+t1len)/2.0);
+	printf("ds(%d,%d) = %f\n",t0->getId(),t1->getId(),ds);
+
 	return ds;
 
 }
@@ -227,13 +223,14 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 	//printf("ndt = %d\n",ndt);
 	//double ds = ndt / ((t0len+t1len)/2.0);
 
-	set_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
+	set_symmetric_difference(t0Tr.begin(), t0Tr.end(), t1Tr.begin(), t1Tr.end(), inserter(diff, diff.begin()));
 	double ds = diff.size() / ((t0Tr.size()+t1Tr.size())/2.0);
 
 	t0Tr.clear();
 	t1Tr.clear();
 	diff.clear();
 
+	printf("ds(%d,%d) = %f\n",t0->testId,t1->testId,ds);
 	return ds;
 
 }
@@ -363,6 +360,66 @@ void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum){
 	}
 }
 
+void update_ds_sum(double *gmdp_arr, int max_t,int noResets, int my_rank, int num_proc){
+	MPI_Status status;
+	int procWithDs[num_proc];
+	procWithDs[my_rank] = -1;
+	gmdp_arr[max_t] = -1;
+
+	struct MPI_VAL_RANK *tmp_arr = (struct MPI_VAL_RANK *) malloc(noResets*sizeof(struct MPI_VAL_RANK));
+
+	MPI_Gather(&procWithDs[my_rank],1,MPI_INT,&procWithDs[0],1,MPI_INT,0,MPI_COMM_WORLD);
+//	fprintf(stdout,"(RANK %d) \t procWithDs: ",my_rank);
+//	for (int var = 0; var < num_proc; ++var) {
+//		fprintf(stdout,"%d\t",procWithDs[var]);
+//	}
+//	fprintf(stdout,"\n");
+	for (int var = 0; var < num_proc; ++var) {
+		if(procWithDs[var]>0){
+//			fprintf(stdout,"(RANK %d) \t receiving %d ds values from process %d  \n",my_rank,procWithDs[var],var);
+			MPI_Recv(tmp_arr,procWithDs[var],MPI_DOUBLE_INT,var,0,MPI_COMM_WORLD,&status);
+//			fprintf(stdout,"(RANK %d) \t received %d ds values from process %d  \n",my_rank,procWithDs[var],var);
+			for (int var2 = 0; var2 < procWithDs[var]; ++var2) {
+				if(gmdp_arr[tmp_arr[var2].rank]>=0) {
+					gmdp_arr[tmp_arr[var2].rank] += tmp_arr[var2].val;
+				}
+			}
+		}
+
+	}
+	free(tmp_arr);
+}
+
+int getMaxDs(double * gmdp_arr,int noResets){
+	int max_ds = noResets-1;
+	int loc_max,cnt,var;
+//	fprintf(stdout,"omp_get_max_threads() = %d\n",omp_get_max_threads());
+	int omp_nothreads = (omp_get_max_threads() > noResets) ? noResets : omp_get_max_threads();
+//	fprintf(stdout,"omp_nothreads = %d\n",omp_nothreads);
+	double omp_resets = noResets/(double)omp_nothreads;
+//	fprintf(stdout,"omp_resets = %f (noResets = %d)\n",omp_resets,noResets);
+	#pragma omp parallel shared(max_ds) num_threads(omp_nothreads) private(loc_max,cnt,var)
+	{
+		cnt = omp_get_thread_num();
+//		fprintf(stdout,"(OMP RANK %d) starts @ %f and ends @ %f\n",cnt,cnt*omp_resets,((cnt+1)*omp_resets));
+		loc_max = max_ds;
+		for(var = cnt*omp_resets; var < ((cnt+1)*omp_resets); var++){
+			if(gmdp_arr[loc_max] < gmdp_arr[var]){
+				loc_max = var;
+//				fprintf(stdout,"(OMP RANK %d) loc_max = %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
+			}
+		}
+		#pragma omp critical
+		{
+			if(gmdp_arr[loc_max] >= gmdp_arr[max_ds] && loc_max < max_ds) {
+				max_ds = loc_max;
+//				fprintf(stdout,"(OMP RANK %d) max_ds updated to %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
+			}
+		}
+	}
+//	fprintf(stdout,"############# max_ds is %d (%f)\n",max_ds,gmdp_arr[max_ds]);
+	return max_ds;
+}
 int toTriangMatrix(int xpos,int ypos,int noReset){
 	//	fprintf(stderr,"(%d,%d)\n",(xpos<ypos)? xpos : ypos,(xpos>ypos)? xpos : ypos);
 	int tmPos = 0;
