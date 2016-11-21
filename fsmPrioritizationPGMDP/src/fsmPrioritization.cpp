@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
 		////////////////////////
 		max_t = pair2rm[0];
 		update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
-//		fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,recv_data->val); fflush(trace);
+//		for (int var = 0; var < noResets; ++var)  fprintf(stdout,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stdout);
 //		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
 //		for (int var = 0; var < noResets; ++var) {
 //			fprintf(trace,"%f\t",gmdp_arr[var]);
@@ -161,8 +161,8 @@ int main(int argc, char **argv) {
 //		fprintf(trace,"\n"); fflush(trace);
 
 		while(!ts.empty()) {
-			//			fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
 			max_t = getMaxDs(gmdp_arr,noResets);
+//			fprintf(stdout,"(RANK %d) \t Highest ds t_%d = %f | Total of test cases = %zu\n",my_rank,max_t, gmdp_arr[max_t],ts.size()); fflush(stdout);
 //			fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,gmdp_arr[max_t]); fflush(trace);
 //			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
 //			for (int var = 0; var < noResets; ++var) {
@@ -172,12 +172,13 @@ int main(int argc, char **argv) {
 			pair2rm[0] = pair2rm[1] = max_t;
 			MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
 
-//			for (int var = 0; var < noResets; ++var)  fprintf(stderr,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stderr);
-			if(ts.size()== 1 && max_t ==0){
+//			for (int var = 0; var < noResets; ++var)  fprintf(stdout,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stdout);			
+			if(ts.size()== 1){
 				gmdp_arr[max_t] = -1;
 			}else{
 				update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
 			}
+//			for (int var = 0; var < noResets; ++var)  fprintf(stdout,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stdout);
 //			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
 //			for (int var = 0; var < noResets; ++var) {
 //				fprintf(trace,"%f\t",gmdp_arr[var]);
@@ -187,11 +188,11 @@ int main(int argc, char **argv) {
 			if(ts.find(max_t)!=ts.end()){
 				t_prtz.push_back(ts[max_t]);
 				ts.erase(max_t);
-//								fprintf(trace,"(RANK %d) \t Test cases %d removed\n",my_rank,max_t); fflush(trace);
+//				fprintf(stdout,"(RANK %d) \t Test cases %d removed\n",my_rank,max_t); fflush(stdout);
 			}
 
 		}
-//				fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
+//		fprintf(stdout,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(stdout);
 		fsmTest->getTestCase().clear();
 		fsmTest->getTestCase().merge(t_prtz);
 

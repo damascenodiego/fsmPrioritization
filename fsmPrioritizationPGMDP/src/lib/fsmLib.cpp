@@ -404,19 +404,20 @@ int getMaxDs(double * gmdp_arr,int noResets){
 //		fprintf(stdout,"(OMP RANK %d) starts @ %f and ends @ %f\n",cnt,floor(cnt*omp_resets),trunc(((cnt+1)*omp_resets)));
 		loc_max = max_ds;
 		for(var = floor(cnt*omp_resets); var < trunc(((cnt+1)*omp_resets)); var++){
-			if(gmdp_arr[loc_max] < gmdp_arr[var]){
+			if(	(gmdp_arr[loc_max] == gmdp_arr[var] && var < loc_max) ||
+				(gmdp_arr[loc_max] < gmdp_arr[var])){
 				loc_max = var;
 //				fprintf(stdout,"(OMP RANK %d) loc_max = %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
 			}
 		}
 		#pragma omp critical
 		{
-			if(gmdp_arr[loc_max] > gmdp_arr[max_ds]) {
+			if(gmdp_arr[loc_max] == gmdp_arr[max_ds] && loc_max < max_ds) {
 				max_ds = loc_max;
-//				fprintf(stdout,"(OMP RANK %d) max_ds updated to %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
-			}else if(gmdp_arr[loc_max] == gmdp_arr[max_ds] && loc_max < max_ds) {
+				//fprintf(stdout,"(OMP RANK %d) max_ds updated to %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
+			}else if(gmdp_arr[loc_max] > gmdp_arr[max_ds]) {
 				max_ds = loc_max;
-//				fprintf(stdout,"(OMP RANK %d) max_ds updated to %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
+				//fprintf(stdout,"(OMP RANK %d) max_ds updated to %d (%f)\n",cnt,loc_max,gmdp_arr[loc_max]);
 			}
 		}
 	}
