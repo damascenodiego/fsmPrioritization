@@ -1,8 +1,8 @@
 #!/bin/sh
 
 np=1
-fsm="sample.kk"
-test="sample.test"
+fsm="../sample.kk"
+test="../sample.test"
 
 if [ $# -ne 0 ]
   then 
