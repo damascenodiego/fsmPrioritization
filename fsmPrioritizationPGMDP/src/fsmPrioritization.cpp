@@ -172,7 +172,12 @@ int main(int argc, char **argv) {
 			pair2rm[0] = pair2rm[1] = max_t;
 			MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
 
-			update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
+//			for (int var = 0; var < noResets; ++var)  fprintf(stderr,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stderr);
+			if(ts.size()== 1 && max_t ==0){
+				gmdp_arr[max_t] = -1;
+			}else{
+				update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
+			}
 //			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
 //			for (int var = 0; var < noResets; ++var) {
 //				fprintf(trace,"%f\t",gmdp_arr[var]);
@@ -192,7 +197,7 @@ int main(int argc, char **argv) {
 
 		pair2rm[0] = pair2rm[1] = -1;
 
-		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
+//		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 		MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
 
 
@@ -270,10 +275,8 @@ int main(int argc, char **argv) {
 		double max_ds = -1;
 
 		int keyPos_i,keyPos_f;
-		keyPos_i = keyPos_f = (((noResets*(noResets-1))/2.0)/(num_proc-1));
-
-		keyPos_i *= (my_rank-1);
-		keyPos_f *= (my_rank);
+		keyPos_i = floor((((noResets*(noResets-1))/2.0)/(num_proc-1))* (my_rank-1));
+		keyPos_f = trunc((((noResets*(noResets-1))/2.0)/(num_proc-1))* (my_rank));
 
 		int inc=0;
 		//		fprintf(trace,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d)\n",my_rank,keyPos_i,keyPos_f);
@@ -399,9 +402,9 @@ int main(int argc, char **argv) {
 		send_data->val  = recv_data->val = -1;
 
 		while(1){
-			if(pair2rm[0] < 0 && pair2rm[1] < 0) break;
-			MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
+//			MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 			MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
+			if(pair2rm[0] < 0 && pair2rm[1] < 0) break;
 		}
 		//		fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,pairSim.size()); fflush(trace);
 	}
