@@ -217,14 +217,12 @@ int main(int argc, char **argv) {
 
 		std::multimap<double,std::pair<int,int>> simPair;
 
-		int keyPos_i,keyPos_f;
-		keyPos_i = keyPos_f = (((noResets*(noResets-1))/2.0)/(num_proc-1));
+		int keyPos_i = floor((((noResets*(noResets-1))/2.0)/(num_proc-1))*(my_rank-1));
+		int keyPos_f = trunc((((noResets*(noResets-1))/2.0)/(num_proc-1))*(my_rank));
 
-		keyPos_i *= (my_rank-1);
-		keyPos_f *= (my_rank);
 
 		int inc=0;
-		//		fprintf(trace,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d)\n",my_rank,keyPos_i,keyPos_f);
+//		fprintf(stderr,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d) (%f)\n",my_rank,keyPos_i,keyPos_f,( ((noResets*(noResets-1))/2.0)));
 		for (int i = 0; i < noResets-1; ++i) {
 			if((inc+noResets-i-1) < keyPos_i){
 				inc+=noResets-i-1; continue;
@@ -236,7 +234,7 @@ int main(int argc, char **argv) {
 					double ds = calcSimpleSimilarity(ts[i],ts[j]);
 					std::pair<int,int> p(i,j);
 					simPair.insert(std::pair<double,std::pair<int,int>>(ds,p));
-					//					fprintf(trace,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
+//					fprintf(stderr,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
 				}
 				inc++;
 			}
@@ -244,7 +242,7 @@ int main(int argc, char **argv) {
 		struct MPI_VAL_RANK *send_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		struct MPI_VAL_RANK *recv_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 
-		//		fprintf(trace,"(RANK %d) \t Total of SimpleSimilarity values = %zu\n",my_rank,simPair.size()); fflush(trace);
+//		fprintf(stderr,"(RANK %d) \t Total of SimpleSimilarity values = %zu\n",my_rank,simPair.size()); fflush(stderr);
 
 		int pair2rm[2];
 		while(!simPair.empty()) {
