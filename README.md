@@ -14,5 +14,5 @@ The [conformanceTest.sh](https://github.com/damascenodiego/fsmPrioritization/blo
 
 
 This project was developed in the context of the course of 
-[SSC5795 - Concurrent Programming](https://uspdigital.usp.br/janus/publico/disciplina/C/SSC5795) at the 
+[SSC5795 - Concurrent Programming](https://uspdigital.usp.br/janus/componente/catalogoDisciplinasInicial.jsf?action=3&sgldis=SSC5795) at the 
 University of São Paulo [(USP)](http://usp.br/) in the Institute of Mathematical and Computer Sciences [(ICMC-USP)](icmc.usp.br/).
