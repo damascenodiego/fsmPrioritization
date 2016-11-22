@@ -402,9 +402,12 @@ int main(int argc, char **argv) {
 		send_data->rank = recv_data->rank = my_rank;
 		send_data->val  = recv_data->val = -1;
 
+		//fprintf(stderr,"(RANK %d) \t Waiting fgetMaxDsor MPI_Bcast\n",my_rank); fflush(stdout);
+		totDs = 0;
 		while(1){
 //			MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 			MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
+			MPI_Gather(&totDs,1,MPI_INT,&totDs,1,MPI_INT,0,MPI_COMM_WORLD);
 			if(pair2rm[0] < 0 && pair2rm[1] < 0) break;
 		}
 		//		fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,pairSim.size()); fflush(trace);
