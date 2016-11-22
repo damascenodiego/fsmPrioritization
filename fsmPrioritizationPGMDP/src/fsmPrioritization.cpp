@@ -31,16 +31,16 @@ int main(int argc, char **argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
 
-	//		char 	filename[46]; // used just when debugging
-	//		FILE 	*trace;  // used just when debugging
-	//
-	//		sprintf(filename,"log/rank_%02d.trace", my_rank);
-	//		trace = fopen(filename, "w");
-	//
-	//		fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);fflush(trace);
-	//		fprintf(trace, "Total of processes: %d \n", num_proc);fflush(trace);
-	//		fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);fflush(trace);
-	//		fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);fflush(trace);
+	/*char 	filename[46]; // used just when debugging
+	FILE 	*trace;  // used just when debugging
+
+	sprintf(filename,"log/rank_%02d.trace", my_rank);
+	trace = fopen(filename, "w");
+
+	fprintf(trace, "Hello fsmPrioritization! @ rank %d \n", my_rank);fflush(trace);
+	fprintf(trace, "Total of processes: %d \n", num_proc);fflush(trace);
+	fprintf(trace,"(RANK %d) \t noResets = %d\n",my_rank,noResets);fflush(trace);
+	fprintf(trace,"(RANK %d) \t (t_%d,t_%d)\n",my_rank,x,y);fflush(trace);*/
 
 	int out;
 	int id_p[2];
@@ -48,12 +48,8 @@ int main(int argc, char **argv) {
 
 	if (my_rank == 0) {
 
-		/////////////////////////////////////////////////////////////////////////////
-		/////////////////////////////////////////////////////////////////////////////
 		struct timespec start,stop;
 		clock_gettime(CLOCK_REALTIME, &start);
-		/////////////////////////////////////////////////////////////////////////////
-		/////////////////////////////////////////////////////////////////////////////
 
 		FILE *fsmFile;
 		FILE *testFile;
@@ -97,9 +93,9 @@ int main(int argc, char **argv) {
 			MPI_Bcast(&(ttemp->pTot),1,MPI_INT,0,MPI_COMM_WORLD);
 			// sending p set
 			MPI_Bcast(ttemp->p,ttemp->pTot,MPI_INT,0,MPI_COMM_WORLD);
-			//			for (int var = 0; var < ttemp->pTot; ++var) {
-			//				MPI_Bcast(&ttemp->p[var],1,MPI_INT,0,row_color[var]);
-			//			}
+			/*for (int var = 0; var < ttemp->pTot; ++var) {
+				MPI_Bcast(&ttemp->p[var],1,MPI_INT,0,row_color[var]);
+			}*/
 		}
 
 		// prioritizing test cases (gmdp)
@@ -112,7 +108,7 @@ int main(int argc, char **argv) {
 		struct MPI_VAL_RANK *recv_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		send_data->rank = my_rank;
 		send_data->val = -1;
-//						fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
+		//						fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,ts.size()); fflush(trace);
 		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 
 		///////////////////////////////////
@@ -140,12 +136,12 @@ int main(int argc, char **argv) {
 		////////////////////////
 		max_t = pair2rm[0];
 		update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
-		//for (int var = 0; var < noResets; ++var)  fprintf(stdout,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stdout);
-//		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
-//		for (int var = 0; var < noResets; ++var) {
-//			fprintf(trace,"%f\t",gmdp_arr[var]);
-//		}
-//		fprintf(trace,"\n"); fflush(trace);
+		/*for (int var = 0; var < noResets; ++var)  fprintf(stdout,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stdout);
+		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
+		for (int var = 0; var < noResets; ++var) {
+			fprintf(trace,"%f\t",gmdp_arr[var]);
+		}
+		fprintf(trace,"\n"); fflush(trace);*/
 
 		//		gmdp_arr[5] = -99;
 		////////////////////////
@@ -153,38 +149,57 @@ int main(int argc, char **argv) {
 		////////////////////////
 		max_t = pair2rm[1];
 		update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
-//		fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,recv_data->val); fflush(trace);
-//		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
-//		for (int var = 0; var < noResets; ++var) {
-//			fprintf(trace,"%f\t",gmdp_arr[var]);
-//		}
-//		fprintf(trace,"\n"); fflush(trace);
+		/*fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,recv_data->val); fflush(trace);
+		fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
+		for (int var = 0; var < noResets; ++var) {
+			fprintf(trace,"%f\t",gmdp_arr[var]);
+		}
+		fprintf(trace,"\n"); fflush(trace);*/
 
+
+		///////////////////////////////////////
+		// GET THE MOST DISTINCT GIVEN ds_sum //
+		///////////////////////////////////////
 		while(!ts.empty()) {
 			max_t = getMaxDs(gmdp_arr,noResets);
-			//fprintf(stdout,"(RANK %d) \t Highest ds t_%d = %f | Total of test cases = %zu\n",my_rank,max_t, gmdp_arr[max_t],ts.size()); fflush(stdout);
-			//fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,gmdp_arr[max_t]); fflush(trace);
-//			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
-//			for (int var = 0; var < noResets; ++var) {
-//				fprintf(trace,"%f\t",gmdp_arr[var]);
-//			}
-//			fprintf(trace,"\n"); fflush(trace);
+			/*fprintf(stdout,"(RANK %d) \t Highest ds t_%d = %f | Total of test cases = %zu\n",my_rank,max_t, gmdp_arr[max_t],ts.size()); fflush(stdout);
+			fprintf(trace,"(RANK %d) \t Highest ds belongs to test cases t_%d (%f)\n",my_rank,max_t,gmdp_arr[max_t]); fflush(trace);
+			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
+			for (int var = 0; var < noResets; ++var) {
+				fprintf(trace,"%f\t",gmdp_arr[var]);
+			}
+			fprintf(trace,"\n"); fflush(trace);*/
+
+			////////////////////////////////////////////////
+			// Broadcast the id of the most distinct test //
+			////////////////////////////////////////////////
 			pair2rm[0] = pair2rm[1] = max_t;
 			MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
 
 			//for (int var = 0; var < noResets; ++var)  fprintf(stdout,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stdout);			
+
+			////////////////////////////
+			// Update ds_sum of max_t //
+			////////////////////////////
 			if(ts.size()== 1){
 				gmdp_arr[max_t] = -1;
 			}else{
+				/////////////////////////////////////////////////////////////////////
+				// increment with ds(t(max_t),x) such that x \in ts & (x != max_t) //
+				/////////////////////////////////////////////////////////////////////
 				update_ds_sum(gmdp_arr,max_t,noResets,my_rank,num_proc);
 			}
-			//for (int var = 0; var < noResets; ++var)  fprintf(stdout,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stdout);
-//			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
-//			for (int var = 0; var < noResets; ++var) {
-//				fprintf(trace,"%f\t",gmdp_arr[var]);
-//			}
-//			fprintf(trace,"\n"); fflush(trace);
+			/*for (int var = 0; var < noResets; ++var)  fprintf(stdout,"%f\t", gmdp_arr[var]); printf("\n"); fflush(stdout);
+			fprintf(trace,"(RANK %d) \t gmdp_arr: ",my_rank);
+			for (int var = 0; var < noResets; ++var) {
+				fprintf(trace,"%f\t",gmdp_arr[var]);
+			}
+			fprintf(trace,"\n"); fflush(trace);*/
 
+			/////////////////////////////
+			// remove max_t from ts    //
+			// include max_t in t_prtz //
+			/////////////////////////////
 			if(ts.find(max_t)!=ts.end()){
 				t_prtz.push_back(ts[max_t]);
 				ts.erase(max_t);
@@ -196,9 +211,13 @@ int main(int argc, char **argv) {
 		fsmTest->getTestCase().clear();
 		fsmTest->getTestCase().merge(t_prtz);
 
+		//////////////////////////////////
+		// Broadcast (-1,-1)
+		// Enables processes to finalize
+		//////////////////////////////////
 		pair2rm[0] = pair2rm[1] = -1;
 
-//		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
+		//		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 		MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
 
 
@@ -211,26 +230,35 @@ int main(int argc, char **argv) {
 
 		strftime(buffer, 20, "%Y_%m_%d_%H_%M_%S", tm_info);
 
+		////////////////////////////////
+		// Save prioritized test case //
+		////////////////////////////////
 		char * prtz = (char *)calloc(1,sizeof(char)*(strlen(argv[2])+40));
 		prtz[0]='\0';
 		strcat(prtz,argv[2]);
-		//		strcat(prtz,".");
-		//		strcat(prtz,buffer);
 		strcat(prtz,".pgmdp.test");
 		testPrtzFile = fopen(prtz,"w");
 		if(testPrtzFile!=NULL)saveTest(testPrtzFile,fsmTest);
 		fflush(testPrtzFile);
 		fclose(testPrtzFile);
-		//		strcat(prtz,".cov");
-		//		FILE *testCoverageFile = fopen(prtz,"w");
-		//		saveTestCoverage(testCoverageFile,fsmTest);
-		//		fclose(testCoverageFile);
+		/*strcat(prtz,".cov");
+		FILE *testCoverageFile = fopen(prtz,"w");
+		saveTestCoverage(testCoverageFile,fsmTest);
+		fclose(testCoverageFile);*/
 
 
 		delete(fsmModel);
 		delete(fsmTest);
-		/////////////////////////////////////////////////////////////////////////////
-		/////////////////////////////////////////////////////////////////////////////
+
+
+		/////////////////////////////////
+		// Save trace file with:
+		// - timestamp,
+		// - test suite filename,
+		// - prioritized test suite filename,
+		// - execution time (end-beg), and
+		// - number of processes
+		/////////////////////////////////
 		clock_gettime(CLOCK_REALTIME, &stop);
 
 		double diff = (double)((stop.tv_sec+stop.tv_nsec*1e-9) - (double)(start.tv_sec+start.tv_nsec*1e-9));
@@ -239,8 +267,6 @@ int main(int argc, char **argv) {
 		FILE 	*trace;  // used just when debugging
 
 		strcat(filename,argv[2]);
-		//		strcat(filename,".");
-		//		strcat(filename,buffer);
 		strcat(filename,".pgmdp.trace");
 		trace = fopen(filename, "a");
 
@@ -275,9 +301,11 @@ int main(int argc, char **argv) {
 		std::pair<int,int> max_ds_pair;
 		double max_ds = -1;
 
+
+		// calculates SM interval of cells to be calculated [i..j)
 		int keyPos_i,keyPos_f;
-		keyPos_i = floor((((noResets*(noResets-1))/2.0)/(num_proc-1))* (my_rank-1));
-		keyPos_f = trunc((((noResets*(noResets-1))/2.0)/(num_proc-1))* (my_rank));
+		keyPos_i = floor((((noResets*(noResets-1))/2.0)/(num_proc-1))* (my_rank-1)); // inclusive    : [i
+		keyPos_f = trunc((((noResets*(noResets-1))/2.0)/(num_proc-1))* (my_rank));   // not inclusive: j)
 
 		int inc=0;
 		//		fprintf(trace,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d)\n",my_rank,keyPos_i,keyPos_f);
@@ -299,7 +327,7 @@ int main(int argc, char **argv) {
 					if(pairSim.find(j) == pairSim.end())  pairSim[j] = new std::map<int,double>();
 					(*pairSim[i])[j] = ds;
 					(*pairSim[j])[i] = ds;
-//										fprintf(trace,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
+					//fprintf(trace,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
 				}
 				inc++;
 			}
@@ -307,42 +335,65 @@ int main(int argc, char **argv) {
 		struct MPI_VAL_RANK *send_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 		struct MPI_VAL_RANK *recv_data = (struct MPI_VAL_RANK *) malloc(sizeof(struct MPI_VAL_RANK));
 
-		//		fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,pairSim.size()); fflush(trace);
+		/*fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,pairSim.size()); fflush(trace);
 
-//		for(auto _ti: pairSim){
-//			std::map<int,double>* m = _ti.second;
-//			for(auto _tj: (*m)){
-//								fprintf(trace,"t[%d][%d]=%f\n",_ti.first,_tj.first,_tj.second);
-//			}
-//		}
+		for(auto _ti: pairSim){
+			std::map<int,double>* m = _ti.second;
+			for(auto _tj: (*m)){
+				fprintf(trace,"t[%d][%d]=%f\n",_ti.first,_tj.first,_tj.second);
+			}
+		}
 
-		//		fflush(trace);
+		fflush(trace);*/
 
 
 		send_data->rank = recv_data->rank = my_rank;
 		send_data->val  = recv_data->val = max_ds;
 
+		// pair of most distinct test cases
 		int pair2rm[2];
 		pair2rm[0] = max_ds_pair.first;
 		pair2rm[1] = max_ds_pair.second;
 
-		//		fprintf(trace,"(RANK %d) \t My highest ds(%d,%d)=%f\n",my_rank,pair2rm[0],pair2rm[1],max_ds); fflush(trace);
+
+		//fprintf(trace,"(RANK %d) \t My highest ds(%d,%d)=%f\n",my_rank,pair2rm[0],pair2rm[1],max_ds); fflush(trace);
+
+		////////////////////////////////////////////////////////
+		// Allreduce: Find the most distinct pair of test cases
+		////////////////////////////////////////////////////////
 		MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
+
+		////////////////////////////////////////////////////////
+		// Broadcasts the pair of most distinct test cases of my_rank process
+		////////////////////////////////////////////////////////
 		MPI_Bcast(&pair2rm,1,MPI_2INT,recv_data->rank,MPI_COMM_WORLD);
-		//		fprintf(trace,"(RANK %d) \t The highest ds(%d,%d)=%f\n",my_rank,pair2rm[0],pair2rm[1],max_ds); fflush(trace);
+		//fprintf(trace,"(RANK %d) \t The highest ds(%d,%d)=%f\n",my_rank,pair2rm[0],pair2rm[1],max_ds); fflush(trace);
 
 
 		struct MPI_VAL_RANK *tmp_arr = (struct MPI_VAL_RANK *) malloc(noResets*sizeof(struct MPI_VAL_RANK));
 
+		///////////////////////////////////////
+		// Check if my_rank process some of
+		// the most distincts test (pair2rm[0])
+		///////////////////////////////////////
 		int totDs;
 		if(pairSim.find(pair2rm[0]) != pairSim.end()){
 			totDs = pairSim[pair2rm[0]]->size();
 		}else{
 			totDs = 0;
 		}
-//				fprintf(trace,"(RANK %d) \t Number of ds to test %d = %d\n",my_rank,pair2rm[0],totDs); fflush(trace);
+		//				fprintf(trace,"(RANK %d) \t Number of ds to test %d = %d\n",my_rank,pair2rm[0],totDs); fflush(trace);
+
+		///////////////////////////////////
+		// Notify root how many ds values
+		// of test (pair2rm[0]) it has
+		///////////////////////////////////
 		MPI_Gather(&totDs,1,MPI_INT,&totDs,1,MPI_INT,0,MPI_COMM_WORLD);
 
+		///////////////////////////////////////
+		// Send the ds values (val) with the
+		// id of the test case compared (rank)
+		///////////////////////////////////////
 		int count;
 		if(totDs>0){
 			count = 0;
@@ -355,6 +406,10 @@ int main(int argc, char **argv) {
 		}
 		pairSim.erase(pair2rm[0]);
 
+		///////////////////////////////////////
+		// Check if my_rank process some of
+		// the most distincts test (pair2rm[1])
+		///////////////////////////////////////
 		if(pairSim.find(pair2rm[1]) != pairSim.end()){
 			totDs = pairSim[pair2rm[1]]->size();
 		}else{
@@ -362,7 +417,17 @@ int main(int argc, char **argv) {
 		}
 
 		//		fprintf(trace,"(RANK %d) \t Number of ds to test %d = %d\n",my_rank,pair2rm[1],totDs); fflush(trace);
+
+		///////////////////////////////////
+		// Notify root how many ds values
+		// of test (pair2rm[0]) it has
+		///////////////////////////////////
 		MPI_Gather(&totDs,1,MPI_INT,&totDs,1,MPI_INT,0,MPI_COMM_WORLD);
+
+		///////////////////////////////////////
+		// Send the ds values (val) with the
+		// id of the test case compared (rank)
+		///////////////////////////////////////
 		if(totDs>0){
 			count = 0;
 			for(auto tds: (*(pairSim[pair2rm[1]]))){
@@ -376,6 +441,9 @@ int main(int argc, char **argv) {
 
 		while(!(pairSim.empty())) {
 
+			////////////////////////////////////////////////////////
+			// Receives the id of the most distinct test case
+			////////////////////////////////////////////////////////
 			MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
 			//			fprintf(trace,"(RANK %d) \t The highest ds belongs to test %d\n",my_rank,pair2rm[0]); fflush(trace);
 
@@ -385,8 +453,17 @@ int main(int argc, char **argv) {
 				totDs = 0;
 			}
 			//			fprintf(trace,"(RANK %d) \t Number of ds to test %d = %d\n",my_rank,pair2rm[0],totDs); fflush(trace);
+
+			///////////////////////////////////
+			// Notify root how many ds values
+			// of test (pair2rm[0]) it has
+			///////////////////////////////////
 			MPI_Gather(&totDs,1,MPI_INT,&totDs,1,MPI_INT,0,MPI_COMM_WORLD);
 
+			///////////////////////////////////////
+			// Send the ds values (val) with the
+			// id of the test case compared (rank)
+			///////////////////////////////////////
 			if(totDs>0){
 				count = 0;
 				for(auto tds: (*(pairSim[pair2rm[0]]))){
@@ -402,22 +479,26 @@ int main(int argc, char **argv) {
 		send_data->rank = recv_data->rank = my_rank;
 		send_data->val  = recv_data->val = -1;
 
+
+		//////////////////////////////////////////
+		// Busy wait to avoid process finalize.
+		// MPI_Bcast to MPI_COMM_WORLD misbehaves
+		// if a process finalizes
+		//////////////////////////////////////////
+
 		//fprintf(stderr,"(RANK %d) \t Waiting fgetMaxDsor MPI_Bcast\n",my_rank); fflush(stdout);
 		totDs = 0;
 		while(1){
-//			MPI_Allreduce(send_data, recv_data, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
 			MPI_Bcast(&pair2rm,1,MPI_2INT,0,MPI_COMM_WORLD);
 			MPI_Gather(&totDs,1,MPI_INT,&totDs,1,MPI_INT,0,MPI_COMM_WORLD);
 			if(pair2rm[0] < 0 && pair2rm[1] < 0) break;
 		}
-		//		fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,pairSim.size()); fflush(trace);
+		//fprintf(trace,"(RANK %d) \t Total of test cases = %zu\n",my_rank,pairSim.size()); fflush(trace);
 	}
 
-	//	MPI_Barrier(MPI_COMM_WORLD);
-
-	//	fprintf(trace,"----(RANK %02d) \t THE END!!!---\n",my_rank);
-	//	fflush(trace);
-	//	fclose(trace);
+	//fprintf(trace,"----(RANK %02d) \t THE END!!!---\n",my_rank);
+	//fflush(trace);
+	//fclose(trace);
 	MPI::Finalize();
 	exit(0);
 
