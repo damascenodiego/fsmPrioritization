@@ -384,7 +384,7 @@ void update_ds_sum(FsmTestSuite *ts, std::map<FsmTestCase*,double>* testSim, Fsm
 	ds_sum[tc->getId()] = -1;
 	for(FsmTestCase * t : ts->getTestCase()){
 		if(ds_sum[t->getId()] >= 0.0) {
-			ds_sum[t->getId()] += testSim[*t];
+			ds_sum[t->getId()] += (*testSim)[t];
 		}
 	}
 }
