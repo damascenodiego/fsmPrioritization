@@ -303,42 +303,61 @@ void prioritization_lmdp(FsmTestSuite* ts){
 
 void prioritization_gmdp(FsmTestSuite* ts){
 	std:: list<FsmTestCase*> tcs;
-	std:: list<FsmTestCase*> t;
+	std:: set<FsmTestCase*> t;
 	for(FsmTestCase *i : ts->getTestCase()){
-		t.push_back(i);
+		t.insert(i);
 	}
-	std::list<FsmTestCase*>::iterator endi = t.end(); endi--;
-	std::list<FsmTestCase*>::iterator endj = t.end();;
+	//	printf("t.size() = %d\n", t.size());
 
-	double 								max_ds = -1;
-	std::list<FsmTestCase*>::iterator 	it;
-	std::list<FsmTestCase*>::iterator 	max_ti;
-	std::list<FsmTestCase*>::iterator 	max_tj;
+	std::list<FsmTestCase*>::iterator endi = ts->getTestCase().end(); endi--;
+	std::list<FsmTestCase*>::iterator endj = ts->getTestCase().end();
 
-	double 	tmp_ds;
-	for(auto ti = t.begin(); ti != endi; ti++){
-		auto tj = ti;
-		for(tj++; tj != endj; tj++){
-			tmp_ds = calcSimpleSimilarity((*ti),(*tj));
-			if(tmp_ds > max_ds){
-				max_ds = tmp_ds;
+
+	int noResets = ts->getTestCase().size();
+	FsmTestCase *ti,*tj,
+				*max_ti,*max_tj;
+	std::map<FsmTestCase*,std::map<FsmTestCase*,double>*> pairSim;
+	double ds, tmp_ds, max_ds = -1;
+
+	//fprintf(stderr,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d) (%f)\n",my_rank,keyPos_i,keyPos_f,( ((noResets*(noResets-1))/2.0)));
+	for (auto i = ts->getTestCase().begin(); i != endi; ++i) {
+		auto j = i;
+		for (j++; j !=endj; ++j) {
+			ti = (*i);
+			tj = (*j);
+			ds = calcSimpleSimilarity(ti,tj);
+
+			if(max_ds < ds){
+				max_ds = ds;
 				max_ti = ti;
 				max_tj = tj;
 			}
+			if(pairSim.find(ti) == pairSim.end()) {
+				pairSim[ti] = new std::map<FsmTestCase*,double>();
+			}
+			if(pairSim.find(tj) == pairSim.end()) {
+				pairSim[tj] = new std::map<FsmTestCase*,double>();
+			}
+			(*pairSim[ti])[tj] = ds;
+			(*pairSim[tj])[ti] = ds;
+
+
+			//fprintf(stderr,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
 		}
 	}
-	tcs.push_back(*max_ti);
-	tcs.push_back(*max_tj);
 
-	//	(*max_ti)->print(); (*max_tj)->print();
 
+	tcs.push_back(max_ti);
+	tcs.push_back(max_tj);
+//
+//
 	double *ds_sum = (double *)calloc(ts->getNoResets(),sizeof(double));
-//	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
-	update_ds_sum(t,*max_ti,ds_sum);
-//	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
-	update_ds_sum(t,*max_tj,ds_sum);
-//	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
-
+////	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+	update_ds_sum(ts,pairSim[max_ti],max_ti,ds_sum);
+////	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+	update_ds_sum(ts,pairSim[max_tj],max_tj,ds_sum);
+////	for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+//
 	t.erase(max_ti);
 	t.erase(max_tj);
 	while (t.size()>0){
@@ -347,24 +366,25 @@ void prioritization_gmdp(FsmTestSuite* ts){
 			tmp_ds = ds_sum[(*ti)->getId()];
 			if(tmp_ds > max_ds) {
 				max_ds = tmp_ds;
-				max_ti = ti;
+				max_ti = *ti;
 			}
 		}
-		tcs.push_back(*max_ti);
-		update_ds_sum(t,*max_ti,ds_sum);
-//		for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
+		tcs.push_back(max_ti);
+		update_ds_sum(ts,pairSim[max_ti],max_ti,ds_sum);
+////		for (int var = 0; var < ts->getNoResets(); ++var)  printf("%f\t", ds_sum[var]); printf("\n"); fflush(stdout);
 		t.erase(max_ti);
 	}
-	for(FsmTestCase *t : tcs) {
-		ts->getTestCase().pop_front();
-		ts->getTestCase().push_back(t);
-	}
+	ts->getTestCase().clear();
+	ts->getTestCase().merge(tcs);
+
 }
 
 
-void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum){
+void update_ds_sum(FsmTestSuite *ts, std::map<FsmTestCase*,double>* testSim, FsmTestCase* tc,double* ds_sum){
 	ds_sum[tc->getId()] = -1;
-	for(FsmTestCase * t : ts){
-		if(ds_sum[t->getId()] >= 0.0) ds_sum[t->getId()] += calcSimpleSimilarity(t,tc);
+	for(FsmTestCase * t : ts->getTestCase()){
+		if(ds_sum[t->getId()] >= 0.0) {
+			ds_sum[t->getId()] += calcSimpleSimilarity(t,tc);
+		}
 	}
 }

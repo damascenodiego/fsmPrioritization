@@ -213,6 +213,6 @@ double calcSimpleSimilarity(FsmTestCase *t0,FsmTestCase *t1);
 double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1);
 void prioritization_lmdp(FsmTestSuite* ts);
 void prioritization_gmdp(FsmTestSuite* ts);
-void update_ds_sum(std::list<FsmTestCase*> &ts, FsmTestCase* tc,double* ds_sum);
+void update_ds_sum(FsmTestSuite *ts, std::map<FsmTestCase*,double>* testSim, FsmTestCase* tc,double* ds_sum);
 
 #endif /* LIB_FSMLIB_H_ */
