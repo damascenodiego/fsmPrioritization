@@ -237,53 +237,63 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 
 void prioritization_lmdp(FsmTestSuite* ts){
 	std:: list<FsmTestCase*> tcs;
-	std:: list<FsmTestCase*> t;
+	std:: set<FsmTestCase*> t;
 	for(FsmTestCase *i : ts->getTestCase()){
-		t.push_back(i);
+		t.insert(i);
 	}
 	//	printf("t.size() = %d\n", t.size());
-	std::list<FsmTestCase*>::iterator endi;
-	std::list<FsmTestCase*>::iterator endj;
 
-	std::list<FsmTestCase*>::iterator 	max_ti;
-	std::list<FsmTestCase*>::iterator 	max_tj;
-	double 								max_ds = -1;
-	double 	tmp_ds;
-	while (t.size()>0){
-		if(t.size()>1){
-			max_ds = -1;
-			endi = t.end(); endi--;
-			endj = t.end();
-			for(auto ti = t.begin(); ti != endi; ti++){
-				auto tj = ti;
-				for(tj++; tj != endj; tj++){
-					tmp_ds = calcSimpleSimilarity((*ti)->getSimpleFormat(),(*tj)->getSimpleFormat());
-					if(tmp_ds > max_ds){
-						max_ds = tmp_ds;
-						max_ti = ti;
-						max_tj = tj;
-					}
-				}
+	std::map<double,std::vector<FsmTestCase*>> simTests;
+	std::list<FsmTestCase*>::iterator endi = ts->getTestCase().end(); endi--;
+	std::list<FsmTestCase*>::iterator endj = ts->getTestCase().end();
+
+
+	int inc=0;
+	int noResets = ts->getTestCase().size();
+	FsmTestCase *ti,*tj;
+	double ds;
+	//fprintf(stderr,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d) (%f)\n",my_rank,keyPos_i,keyPos_f,( ((noResets*(noResets-1))/2.0)));
+	for (auto i = ts->getTestCase().begin(); i != endi; ++i) {
+		auto j = i;
+		for (j++; j !=endj; ++j) {
+			ti = (*i);
+			tj = (*j);
+			ds = calcSimpleSimilarity(ti,tj);
+			if(simTests.find(ds) == simTests.end()){
+				std::vector<FsmTestCase*> vect;
+				simTests.insert(std::pair<double,std::vector<FsmTestCase*>>(ds,vect));
 			}
-			//			printf("t.size() = %d\n", t.size());
-			//			printf("tcs.size() = %d\n", tcs->size());
-			tcs.push_back(*max_ti);
-			tcs.push_back(*max_tj);
-			t.erase(max_ti);
-			t.erase(max_tj);
-//			printf("\tcalcSimpleSimilarity(t[%d],t[%d]) = %f \n", (*max_ti)->getId(),(*max_tj)->getId(),max_ds);
-			//			printf("t.size() = %d\n", t.size());
-			//			printf("tcs.size() = %d\n", tcs.size());
-		}else{
+			simTests[ds].push_back(ti);
+			simTests[ds].push_back(tj);
+			//fprintf(stderr,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
+			inc++;
+		}
+	}
+
+	std::multimap<double,std::vector<FsmTestCase*>>::reverse_iterator rit = simTests.rbegin();
+
+	while (t.size()>0){
+
+		int vectSiz = rit->second.size();
+		for (int var = 0; var < vectSiz; var+=2) {
+			ti = rit->second[var];
+			tj = rit->second[var+1];
+			if(t.find(ti) != t.end() && t.find(tj) != t.end()){
+				tcs.push_back(ti);
+				tcs.push_back(tj);
+				t.erase(ti);
+				t.erase(tj);
+			}
+		}
+		++rit;
+		if(t.size()==1){
 			tcs.push_back(*t.begin());
 			t.erase(t.begin());
-			//			printf("t.size() = %d\n", t.size());
-			//			printf("tcs.size() = %d\n", tcs.size());
 		}
-
 	}
 	ts->getTestCase().clear();
 	ts->getTestCase().merge(tcs);
+
 //	for(FsmTestCase *t : tcs) {
 //		printf("\tt[%d]\n", (t)->getId());
 //		ts->getTestCase().pop_front();
