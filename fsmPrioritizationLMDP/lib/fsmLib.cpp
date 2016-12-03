@@ -237,19 +237,20 @@ double calcSimpleSimilarity(SimpleFsmTestCase *t0, SimpleFsmTestCase *t1){
 
 void prioritization_lmdp(FsmTestSuite* ts){
 	std:: list<FsmTestCase*> tcs;
-	std:: set<FsmTestCase*> t;
-	for(FsmTestCase *i : ts->getTestCase()){
-		t.insert(i);
-	}
+//	std:: set<FsmTestCase*> t;
+//	for(FsmTestCase *i : ts->getTestCase()){
+//		t.insert(i);
+//	}
 	//	printf("t.size() = %d\n", t.size());
 
-	std::map<double,std::vector<FsmTestCase*>> simTests;
+	std::multimap<double,std::pair<FsmTestCase*,FsmTestCase*>> simTests;
 	std::list<FsmTestCase*>::iterator endi = ts->getTestCase().end(); endi--;
 	std::list<FsmTestCase*>::iterator endj = ts->getTestCase().end();
 
 
 	int inc=0;
-	int noResets = ts->getTestCase().size();
+	int* t = (int*)calloc(ts->getTestCase().size(),sizeof(int));
+	int tTot = ts->getTestCase().size();
 	FsmTestCase *ti,*tj;
 	double ds;
 	//fprintf(stderr,"(RANK %d) \t calcSimpleSimilarity calculated between positions [%d..%d) (%f)\n",my_rank,keyPos_i,keyPos_f,( ((noResets*(noResets-1))/2.0)));
@@ -258,38 +259,42 @@ void prioritization_lmdp(FsmTestSuite* ts){
 		for (j++; j !=endj; ++j) {
 			ti = (*i);
 			tj = (*j);
-			ds = calcSimpleSimilarity(ti,tj);
-			if(simTests.find(ds) == simTests.end()){
-				std::vector<FsmTestCase*> vect;
-				simTests.insert(std::pair<double,std::vector<FsmTestCase*>>(ds,vect));
-			}
-			simTests[ds].push_back(ti);
-			simTests[ds].push_back(tj);
+			ds = -1*calcSimpleSimilarity(ti,tj);
+			simTests.insert(std::pair<double,std::pair<FsmTestCase*,FsmTestCase*>>(ds,std::pair<FsmTestCase*,FsmTestCase*>(ti,tj)));
 			//fprintf(stderr,"(RANK %d) \t calcSimpleSimilarity to test pair ds(%d,%d)=%f\n",my_rank,i,j,ds);
 			inc++;
 		}
 	}
 
-	std::multimap<double,std::vector<FsmTestCase*>>::reverse_iterator rit = simTests.rbegin();
+	std::multimap<double,std::pair<FsmTestCase*,FsmTestCase*>>::iterator  it = simTests.begin();
 
-	while (t.size()>0){
+	while (tTot>0){
+//		fprintf(stderr,"tTot = %d\n",tTot);
 
-		int vectSiz = rit->second.size();
-		for (int var = 0; var < vectSiz; var+=2) {
-			ti = rit->second[var];
-			tj = rit->second[var+1];
-			if(t.find(ti) != t.end() && t.find(tj) != t.end()){
-				tcs.push_back(ti);
-				tcs.push_back(tj);
-				t.erase(ti);
-				t.erase(tj);
+		ti = it->second.first;
+		tj = it->second.second;
+
+//		fprintf(stderr,"ds(t[%d],t[%d])=%f\n",ti->getId(),tj->getId(),it->first);
+
+
+		if(t[ti->getId()] == 0 && t[tj->getId()] == 0){
+			tcs.push_back(ti);
+			t[ti->getId()] = 1; --tTot;
+			tcs.push_back(tj);
+			t[tj->getId()] = 1; --tTot;
+//			fprintf(stderr,"t[%d] and t[%d] added to tcs\n",ti->getId(),tj->getId());
+		}
+
+		if(tTot==1){
+			auto ti_it = ts->getTestCase().begin();
+			for (int var = 0; var < ts->getTestCase().size(); ++var) {
+				ti_it++;
+				if(t[var] == 0) break;
 			}
+			tcs.push_back(ti);
+			t[ti->getId()] = 1; --tTot;
 		}
-		++rit;
-		if(t.size()==1){
-			tcs.push_back(*t.begin());
-			t.erase(t.begin());
-		}
+		++it;
 	}
 	ts->getTestCase().clear();
 	ts->getTestCase().merge(tcs);
